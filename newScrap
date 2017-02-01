@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Jan 28 13:46:41 2017
+
+@author: zdhughes
+"""
+
+	def plotPHD(self, sums, SIL, SIU, title, legendObject, units, color):
+
+		myFont = {'fontname':'Liberation Serif'}
+		plt.figure(figsize=(9,6), dpi=100)
+		bins = np.linspace(np.min(sums),np.max(sums),100)
+		plt.title(title+' (Interval: ['+str(SIL)+' '+units+', '+str(SIU)+' '+units+'])',**myFont)
+		plt.ylabel('Number of Events [$N$]',**myFont)
+		plt.xlabel('-1$\cdot$Summed Voltage[$mV$]',**myFont)
+		n, trash, bars = plt.hist(sums, bins, alpha=1.0, label=legendObject,color=color)
+		plt.ylim(0,max(n)+10)
+		plt.legend(loc='upper right')
+		plt.savefig('1_Less_Simple_Summed_PHD_Full.png',dpi=500)
+		plt.show()
+		plt.close()
+
+myFont = {'fontname':'Liberation Serif'}
+plt.figure(figsize=(9,6), dpi=100)
+bins = np.linspace(np.min(signalSumsFull[:,1]),np.max(signalSumsFull[:,1]),100)
+plt.title('Less Simple Summed PHD (Interval: ['+str(te.SIL)+' $\mu s$, '+str(te.SIU)+'$\mu s$])',**myFont)
+plt.ylabel('Number of Events [$N$]',**myFont)
+plt.xlabel('-1$\cdot$Summed Voltage[$mV$]',**myFont)
+m, trash, bars = plt.hist(signalSumsFull[:,1], bins, alpha=1.0, label='WLS Fiber Trace',color='red')
+plt.ylim(0,max(m)+10)
+plt.legend(loc='upper right')
+plt.savefig('2_Less_Simple_Summed_PHD_Full.png',dpi=500)
+plt.show()
+plt.close()
+
+################
+
+
+############CORR
+
+myFont = {'fontname':'Liberation Serif'}
+plt.figure(figsize=(9,6), dpi=100)
+bins = np.linspace(np.min(signalSumsFull[:,0]),np.max(signalSumsFull[:,0]),100)
+plt.title('Less Simple Summed PHD (Interval: ['+str(te.SIL)+' $\mu s$, '+str(te.SIU)+'$\mu s$])',**myFont)
+plt.ylabel('Number of Events [$N$]',**myFont)
+plt.xlabel('-1$\cdot$Summed Voltage[$mV$]',**myFont)
+plt.hist(signalSums[:,0], bins, alpha=1.0, label='CsI Trace',color='blue')
+plt.ylim(0,max(n)+10)
+plt.legend(loc='upper right')
+plt.savefig('1_Less_Simple_Summed_PHD_Corr.png',dpi=500)
+plt.show()
+plt.close()
+	
+
+myFont = {'fontname':'Liberation Serif'}
+plt.figure(figsize=(9,6), dpi=100)
+bins = np.linspace(np.min(signalSumsFull[:,1]),np.max(signalSumsFull[:,1]),100)
+plt.title('Less Simple Summed PHD (Interval: ['+str(te.SIL)+' $\mu s$, '+str(te.SIU)+'$\mu s$])',**myFont)
+plt.ylabel('Number of Events [$N$]',**myFont)
+plt.xlabel('-1$\cdot$Summed Voltage[$mV$]',**myFont)
+plt.hist(signalSums[:,1], bins, alpha=1.0, label='WLS Fiber Trace',color='red')
+plt.ylim(0,max(m)+10)
+plt.legend(loc='upper right')
+plt.savefig('2_Less_Simple_Summed_PHD_Corr.png',dpi=500)
+plt.show()
+plt.close()
+
+################
+
+############REJ
+
+myFont = {'fontname':'Liberation Serif'}
+plt.figure(figsize=(9,6), dpi=100)
+bins = np.linspace(np.min(signalSumsFull[:,0]),np.max(signalSumsFull[:,0]),100)
+plt.title('Less Simple Summed PHD (Interval: ['+str(te.SIL)+' $\mu s$, '+str(te.SIU)+'$\mu s$])',**myFont)
+plt.ylabel('Number of Events [$N$]',**myFont)
+plt.xlabel('-1$\cdot$Summed Voltage[$mV$]',**myFont)
+plt.hist(signalSumsRej[:,0], bins, alpha=1.0, label='CsI Trace',color='blue')
+plt.ylim(0,max(n)+10)
+plt.legend(loc='upper right')
+plt.savefig('1_Less_Simple_Summed_PHD_Rej.png',dpi=500)
+plt.show()
+plt.close()
+	
+
+myFont = {'fontname':'Liberation Serif'}
+plt.figure(figsize=(9,6), dpi=100)
+bins = np.linspace(np.min(signalSumsFull[:,1]),np.max(signalSumsFull[:,1]),100)
+plt.title('Less Simple Summed PHD (Interval: ['+str(te.SIL)+' $\mu s$, '+str(te.SIU)+'$\mu s$])',**myFont)
+plt.ylabel('Number of Events [$N$]',**myFont)
+plt.xlabel('-1$\cdot$Summed Voltage[$mV$]',**myFont)
+plt.hist(signalSumsRej[:,1], bins, alpha=1.0, label='WLS Fiber Trace',color='red')
+plt.ylim(0,max(m)+10)
+plt.legend(loc='upper right')
+plt.savefig('2_Less_Simple_Summed_PHD_Rej.png',dpi=500)
+plt.show()
+plt.close()
