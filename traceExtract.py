@@ -18,6 +18,7 @@ import matplotlib as mpl
 import subprocess
 from pathlib import Path
 import traceHandler
+import pandas as pd
 
 def codePause():
 	code.interact(local=locals())
@@ -57,6 +58,12 @@ else:
 	traceList = te.extractDualRawTraces(lines)
 	del lines
 
+
+Interval = np.linspace(te.horizontalSymmetricStart,te.horizontalSymmetricStop,te.horizontalSampleNumber)
+traceList2 = te.dualTraceToPandas(traceList, Interval)
+
+code.interact(local=locals())
+sys.exit('Code Break!')
 	
 #Ok, data preparation is over; it's time for number crunching.
 	
@@ -65,28 +72,36 @@ else:
 #Sum the pedestal region
 #pedestalTraces is a list of 2d numpy arrays. Shape: [# of traces][# of samples, # of channels]
 #pedestalSums is a 2d numpy array. [# of traces, # of channels]
+pdLimits = [te.PIL,te.PIU]
+pedestalTraces2 = te.extractDualPandasSubtraces(traceList2, pdLimits, pdLimits, invert = False)
+pedestalSums2 = te.sumPandasTraces(pedestalTraces2)
+
 pedestalTraces = te.extractDualSubtraces(traceList, te.pedestalLimits, invert = False)
 pedestalSums = te.sumDualTraces(pedestalTraces)
 del pedestalTraces
 
-code.interact(local=locals())
-sys.exit('Code Break!')
-
 #Invert the traces for nicer histograming.
+pedestalTracesInverted2 = te.extractDualPandasSubtraces(traceList2, pdLimits, pdLimits, invert = False)
+pedestalSumsInverted2 = te.sumDualTraces(pedestalTracesInverted2)
+
 pedestalTracesInverted = te.extractDualSubtraces(traceList, te.pedestalLimits, invert = True)
 pedestalSumsInverted = te.sumDualTraces(pedestalTracesInverted)
 
 #Calculate the pedestal offsets and correct the traceList based on 
 # offsets is a tuple of the channel offsets. (channel1Offset, channel2Offset)
 #correct the whole traceList list. Delete the old one.
+offsets2 = te.getDualAvgTraceMedian(pedestalSums2, [te.pedestalInterval,te.pedestalInterval], invert = False)
+traceListCorrected2 = te.extractDualPandasSubtraces(traceList2, offsets2)
+
 offsets = te.getDualAvgTraceMedian(pedestalSums, te.pedestalInterval, invert = False)
 traceListCorrected = te.pedestalDualSubtractions(traceList, offsets)
+code.interact(local=locals())
+sys.exit('Code Break!')
 del traceList
 
 #Extract the signal region from the CsI and WLS Fiber, used in plotting and spike rejection
 #Shape: [# of traces][sample # in sigal region, # of channels]
 signalTracesRaw = te.extractDualSubtraces(traceListCorrected, te.signalLimits, invert = False)
-
 #extract singal region from all corrected traces, invert because these are only used in sums/histograms
 signalTracesCor = te.extractDualSubtraces(traceListCorrected, te.signalLimits, invert = True)
 

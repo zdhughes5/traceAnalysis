@@ -11,11 +11,14 @@ import code
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import pandas as pd
 
 def codePause():
 	code.interact(local=locals())
 	sys.exit('Code Break!')
 
+#This class does the data extraction and data crunching. Mostly a collection of simple commands 
+#so that main scripts can easily just call them and do analysis.
 class traceExtractor:
 	
 	def __init__(self, config = None):
@@ -26,22 +29,25 @@ class traceExtractor:
 	def setupClassVariables(self):
 
 		#Read in config variables
+		#[General]
 		self.workingDir = Path(self.config['General']['workingDir'])
-		self.channel1 = self.workingDir/self.config['General']['channel1']
-		self.channel2 = self.workingDir/self.config['General']['channel2']
-		self.channel1BG = self.workingDir/self.config['General']['channel1BG']
-		self.channel2BG = self.workingDir/self.config['General']['channel2BG']
-		self.SIL = float(self.config['General']['signalIntegrationLower'])
-		self.SIU = float(self.config['General']['signalIntegrationUpper'])
-		self.PIL = float(self.config['General']['pedestalIntegrationLower'])
-		self.PIU = float(self.config['General']['pedestalIntegrationUpper'])
-		self.horizontalGridNumber = float(self.config['General']['horizontalGridNumber'])
+		self.dataDir = Path(self.config['General']['dataDir'])
+		self.channel1 = self.dataDir/self.config['General']['channel1']
+		self.channel2 = self.dataDir/self.config['General']['channel2']
+		self.channel1BG = self.dataDir/self.config['General']['channel1BG']
+		self.channel2BG = self.dataDir/self.config['General']['channel2BG']
+		self.saveData = bool(self.config['General']['saveData'])
+		self.savePlots = bool(self.config['General']['savePlots'])
+		self.dataFolder = self.config['General']['dataFolder']
+		self.plotsFolder = self.config['General']['plotsFolder']
+		self.saveFilename = self.config['General']['saveFilename']
+		
+		#[Window]
+		self.symmetric = bool(self.config['General']['symmetric'])
 		self.horizontalWidth = float(self.config['General']['horizontalWidth'])
-		self.voltageThreshold = float(self.config['General']['voltageThreshold'])
-		self.timeThreshold = int(self.config['General']['timeThreshold'])
+		self.horizontalGridNumber = float(self.config['General']['horizontalGridNumber'])
 		self.horizontalSampleNumber = float(self.config['General']['horizontalSampleNumber'])
 		self.horizontalUnits = self.config['General']['horizontalUnits']
-		self.verticalUnits = self.config['General']['verticalUnits']
 		if self.horizontalUnits == 's':
 			self.horizontalUnits = '$Seconds$'			
 		elif self.horizontalUnits == 'm':
@@ -49,28 +55,54 @@ class traceExtractor:
 		elif self.horizontalUnits == 'u':
 			self.horizontalUnits = '$\mu s$'
 		elif self.horizontalUnits == 'n':
-			self.horizontalUnits = '$ns$'
+			self.horizontalUnits = '$ns$'		
+		self.verticalUnits = self.config['General']['verticalUnits']
 		self.verticalDivison = float(self.config['General']['verticalDivison'])
 		self.verticalGridNumber  = float(self.config['General']['verticalGridNumber'])
-		self.saveTextData = self.config['General']['saveTextData']
-		self.savePrefix = self.config['General']['savePrefix']
-		self.saveFolder = self.config['General']['saveFolder']
+
+		#[Integration]
+		self.SIL = float(self.config['General']['signalIntegrationLower'])
+		self.SIU = float(self.config['General']['signalIntegrationUpper'])
+		self.PIL = float(self.config['General']['pedestalIntegrationLower'])
+		self.PIU = float(self.config['General']['pedestalIntegrationUpper'])
 		
+		#[SpikeRejection]
+		self.voltageThreshold = float(self.config['General']['voltageThreshold'])
+		self.timeThreshold = int(self.config['General']['timeThreshold'])
+
 		#Calculate some values
-		self.horizontalConversionPhys = self.horizontalWidth/self.horizontalGridNumber #Turns grid points/ticks into physicsal marks
-		self.horizontalConversionImag = self.horizontalSampleNumber/self.horizontalWidth #Turns physical units into array index 
-		self.horizontalSymmetricStart = self.horizontalWidth/2 - self.horizontalWidth
-		self.horizontalSymmetricStop = self.horizontalWidth/2		
-		self.horizontalStart = self.horizontalSymmetricStart*self.horizontalConversionPhys
-		self.horizontalStop = self.horizontalSymmetricStop*self.horizontalConversionPhys
-		self.iSIL = int((self.SIL+self.horizontalSymmetricStop)*self.horizontalConversionImag)
-		self.iSIU = int((self.SIU+self.horizontalSymmetricStop)*self.horizontalConversionImag)
-		self.iPIL = int((self.PIL+self.horizontalSymmetricStop)*self.horizontalConversionImag)
-		self.iPIU = int((self.PIU+self.horizontalSymmetricStop)*self.horizontalConversionImag)
-		self.signalLimits = [int(self.iSIL),int(self.iSIU)]
-		self.pedestalLimits = [int(self.iPIL),int(self.iPIU)]
-		self.signalInterval = self.iSIU - self.iSIL
-		self.pedestalInterval = self.iPIU - self.iPIL
+		#Conversion factors and array starts and stops
+		self.horizontalConversionGtoP = self.horizontalWidth/self.horizontalGridNumber #Turns grid points/ticks into physicsal marks
+		self.horizontalConversionPtoI = self.horizontalSampleNumber/self.horizontalWidth #Turns physical units into array index 
+		self.horizontalSymmetricStartPhys = self.horizontalWidth/2 - self.horizontalWidth
+		self.horizontalSymmetricStopPhys = self.horizontalWidth/2
+		self.horizontalStartPhys = float(0)
+		self.horizontalStopPhys = self.horizontalWidth
+		self.horizontalStartImag = int(0)
+		self.horizontalStopImag = int(self.horizontalSampleNumber)
+
+		#Image integration limits (user gives physical location)
+		if self.symmetric == True:
+			self.iSIL = int(round((self.SIL+self.horizontalSymmetricStopPhys)*self.horizontalConversionPtoI))
+			self.iSIU = int(round((self.SIU+self.horizontalSymmetricStopPhys)*self.horizontalConversionPtoI))
+			self.iPIL = int(round((self.PIL+self.horizontalSymmetricStopPhys)*self.horizontalConversionPtoI))
+			self.iPIU = int(round((self.PIU+self.horizontalSymmetricStopPhys)*self.horizontalConversionPtoI))
+		else:
+			self.iSIL = int(round(self.SIL*self.horizontalConversionPtoI))
+			self.iSIU = int(round(self.SIU*self.horizontalConversionPtoI))
+			self.iPIL = int(round(self.PIL*self.horizontalConversionPtoI))
+			self.iPIU = int(round(self.PIU*self.horizontalConversionPtoI))
+		
+		self.signalLimitsPhys = [self.SIL, self.SIU]
+		self.signalLimitsImag = [self.iSIL, self.iSIU]
+		self.pedestalLimitsPhys = [self.PIL, self.PIU]
+		self.pedestalLimitsImag = [self.iPIL, self.iPIU]
+
+		self.signalIntervalPhys = self.SIU - self.SIL
+		self.signalIntervalImag = self.iSIU - self.iSIL
+		self.pedestalIntervalPhys = self.PIU - self.PIL
+		self.pedestalIntervalImag = self.iPIU - self.iPIL
+		
 		self.veritcalDivisionStart = 2.
 		self.verticalEnd = self.veritcalDivisionStart*self.verticalDivison
 		self.veritcalStart = -1*(self.verticalGridNumber-self.veritcalDivisionStart)*self.verticalDivison
@@ -142,6 +174,45 @@ class traceExtractor:
 
 		
 	##########	
+	
+	def extractPandasSubtrace(self, traceData, run, limits, invert=False):
+		
+		if invert==False:
+			traceData[run] = traceData[run][limits[0]:limits[1]]
+			return traceData
+		else:
+			traceData[run] = -1*traceData[run][limits[0]:limits[1]]
+			return traceData
+
+	def extractDualPandasSubtrace(self, traceData, runs, limits1, limits2, invert=False):
+		
+		if invert==False:
+			traceData[runs[0]] = traceData[runs[0]][limits1[0]:limits1[1]]
+			traceData[runs[1]] = traceData[runs[1]][limits2[0]:limits2[1]]
+			return traceData
+		else:
+			traceData[runs[0]] = -1*traceData[runs[0]][limits1[0]:limits1[1]]
+			traceData[runs[1]] = -1*traceData[runs[1]][limits2[0]:limits2[1]]
+			return traceData
+		
+	def extractPandasSubtraces(self, traceData, limits, invert=False):
+		
+		if invert==False:
+			
+			return traceData[:][limits[0]:limits[1]]
+		else:
+			return -1*traceData[:][limits[0]:limits[1]]
+			
+	def extractDualPandasSubtraces(self, traceData, limits1, limits2, invert=False):
+		
+		if invert==False:
+			traceData[traceData.columns[0::2]] = traceData[traceData.columns[0::2]][limits1[0]:limits1[1]]
+			traceData[traceData.columns[1::2]] = traceData[traceData.columns[1::2]][limits2[0]:limits2[1]]
+			return traceData
+		else:
+			traceData[traceData.columns[0::2]] = -1*traceData[traceData.columns[0::2]][limits1[0]:limits1[1]]
+			traceData[traceData.columns[1::2]] = -1*traceData[traceData.columns[1::2]][limits2[0]:limits2[1]]
+			return traceData
 		
 	#Extracts a subset of given numpy array based on limits. Optional invert.
 	def extractSubtrace(self, traceData, limits, invert= False):
@@ -189,6 +260,19 @@ class traceExtractor:
 		
 	##########	
 	
+	def sumPandasTrace(self, traceData, run):
+	
+		return traceData[run].sum()
+	
+		
+	def sumDualPandasTrace(self, traceData, runs, run2):
+		
+		return traceData[runs].sum()
+		
+	def sumPandasTraces(self, traceData):
+		
+		return traceData[:].sum()
+		
 	#Sum an array
 	def sumTrace(self, traceData):
 		
@@ -231,6 +315,20 @@ class traceExtractor:
 		
 	##########	
 	
+	
+	def getPandasAvgMedian(self, traceData, intervalSize, invert = False):
+		
+		if invert == False:
+			return traceData.median()/intervalSize
+		else:
+			return -1*traceData.median()/intervalSize
+			
+	def getDualPandasAvgMedian(self, traceData, intervalSizes, invert = False):
+		if invert == False:
+			return (traceData[0::2].median()/intervalSizes[0], traceData[1::2].median()/intervalSizes[1])
+		else:
+			return (-1*traceData[0::2].median()/intervalSizes[0], -1*traceData[1::2].median()/intervalSizes[1])
+			
 	#Get median of an array.
 	def getTraceMedian(self, traceData):
 		
@@ -258,6 +356,15 @@ class traceExtractor:
 		
 	##########
 	
+			
+	def pedestalDualPandasSubtractions(self, traceData, pedestalOffsets):
+		
+		
+		traceData[traceData.columns[0::2]] = traceData[traceData.columns[0::2]].subtract(pedestalOffsets[0], axis='columns')
+		traceData[traceData.columns[1::2]] = traceData[traceData.columns[1::2]].subtract(pedestalOffsets[1], axis='columns')
+		return traceData
+		
+		
 	#Subtract offset from array.
 	def pedestalSubtraction(self, traceData, pedestalOffset):
 
@@ -298,6 +405,29 @@ class traceExtractor:
 		
 	##########
 	
+	def pandasSpikeRejection(self, traceData, limits, voltageThreshold, timeThreshold, saveSpikes=False):
+		
+		for i, columns in enumerate(traceData[0::2]):
+			
+			if (len(np.where(traceData['channel1_'+str(i)][limits[0]:limits[1]] < voltageThreshold)[0]) < timeThreshold) and saveSpikes==True:
+				if i==0:
+					savedSpikes= pd.DataFrame(traceData['channel1_'+str(i)])
+					savedSpikes['channel2_'+str(i)] = traceData['channel2_'+str(i)]
+				else:
+					savedSpikes[['channel1_'+str(i),'channel2_'+str(i)]] = traceData[['channel1_'+str(i),'channel2_'+str(i)]]
+			elif(len(np.where(traceData['channel1_'+str(i)][limits[0]:limits[1]] < voltageThreshold)[0]) > timeThreshold):
+				if i==0:
+					returnData = pd.DataFrame(traceData['channel1_'+str(i)])
+					returnData['channel2_'+str(i)] = traceData['channel2_'+str(i)]
+				else:
+					returnData[['channel1_'+str(i),'channel2_'+str(i)]] = traceData[['channel1_'+str(i),'channel2_'+str(i)]]
+		print(str(len(returnData))+' accepted, '+str(len(savedSpikes))+' rejected')
+		if saveSpikes == True:
+			return (returnData, savedSpikes)
+		else:
+			return returnData
+			
+			
 	#Simple spike rejection technique. Subject to fine tuning by user. Rejects traces with X points over Y threshold.
 	def spikeRejection(self, fullTraceData, testTraceData, voltageThreshold, timeThreshold, saveSpikes=False):
 		
@@ -319,7 +449,41 @@ class traceExtractor:
 		
 	##########
 	
+	def tracetoPandas(self, traceList, indexArray):
+		
+		label = 'channel1_'
+		
+		for i, element in enumerate(self, traceList, indexArray):
+			
+			if i == 0:
+				d = {label+str(i):element[:]}
+				dataFrameReturned = pd.DataFrame(d, inde3x=indexArray)
+			else:
+				dataFrameReturned[label+str(i)] = element[:]
 	
+		return dataFrameReturned
+	
+	def dualTraceToPandas(self, traceList, indexArray):
+
+		
+		label1 = 'channel1_'
+		label2 = 'channel2_'
+		
+		for i, element in enumerate(traceList):
+			if i == 0:
+				d = {label1+str(i):element[:,0], label2+str(i):element[:,1]}
+				dataFrameReturned = pd.DataFrame(d,index=indexArray)				
+		
+			else:
+				dataFrameReturned[label1+str(i)], dataFrameReturned[label2+str(i)] = [element[:,0],element[:,1]]
+		
+		return dataFrameReturned
+		
+	def saveTraceToh5(self, traceList, tracePrefix):
+		
+		traceList.to_hdf(tracePrefix+'.h5', 'table')
+		
+		
 	
 		
 class tracePlotter:
