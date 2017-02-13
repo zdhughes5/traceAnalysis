@@ -245,7 +245,36 @@ for i, element in enumerate(traceListSpikesRej[0]):
 	
 	
 	
+		def extractPandasSubtrace(self, traceData, run, limits, invert=False):
+		
+		if invert==False:
+			traceData[run] = traceData[run][limits[0]:limits[1]]
+			return traceData
+		else:
+			traceData[run] = -1*traceData[run][limits[0]:limits[1]]
+			return traceData
+
+	def extractDualPandasSubtrace(self, traceData, runs, limits, invert=False):
+		
+
+		
+		if invert==False:
+			for i, run in enumerate(runs):
+				
+				traceData[run] = traceData[runs[0]][limits1[0]:limits1[1]]
+			return traceData
+		else:
+			traceData[runs[0]] = -1*traceData[runs[0]][limits1[0]:limits1[1]]
+			traceData[runs[1]] = -1*traceData[runs[1]][limits2[0]:limits2[1]]
+			return traceData
+		
+			
 	
+	def sumPandasTrace(self, traceData, run):
+	
+		return traceData[run].sum()
+	
+		
 	
 	
 	

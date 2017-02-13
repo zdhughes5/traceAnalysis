@@ -17,7 +17,7 @@ def codePause():
 	code.interact(local=locals())
 	sys.exit('Code Break!')
 
-#This class does the data extraction and data crunching. Mostly a collection of simple commands 
+#This class does the data extraction and data crunching. Mostly a collection of simple functions 
 #so that main scripts can easily just call them and do analysis.
 class traceExtractor:
 	
@@ -43,11 +43,11 @@ class traceExtractor:
 		self.saveFilename = self.config['General']['saveFilename']
 		
 		#[Window]
-		self.symmetric = bool(self.config['General']['symmetric'])
-		self.horizontalWidth = float(self.config['General']['horizontalWidth'])
-		self.horizontalGridNumber = float(self.config['General']['horizontalGridNumber'])
-		self.horizontalSampleNumber = float(self.config['General']['horizontalSampleNumber'])
-		self.horizontalUnits = self.config['General']['horizontalUnits']
+		self.symmetric = bool(self.config['Window']['symmetric'])
+		self.horizontalWidth = float(self.config['Window']['horizontalWidth'])
+		self.horizontalGridNumber = float(self.config['Window']['horizontalGridNumber'])
+		self.horizontalSampleNumber = float(self.config['Window']['horizontalSampleNumber'])
+		self.horizontalUnits = self.config['Window']['horizontalUnits']
 		if self.horizontalUnits == 's':
 			self.horizontalUnits = '$Seconds$'			
 		elif self.horizontalUnits == 'm':
@@ -56,19 +56,19 @@ class traceExtractor:
 			self.horizontalUnits = '$\mu s$'
 		elif self.horizontalUnits == 'n':
 			self.horizontalUnits = '$ns$'		
-		self.verticalUnits = self.config['General']['verticalUnits']
-		self.verticalDivison = float(self.config['General']['verticalDivison'])
-		self.verticalGridNumber  = float(self.config['General']['verticalGridNumber'])
+		self.verticalUnits = self.config['Window']['verticalUnits']
+		self.verticalDivison = float(self.config['Window']['verticalDivison'])
+		self.verticalGridNumber  = float(self.config['Window']['verticalGridNumber'])
 
 		#[Integration]
-		self.SIL = float(self.config['General']['signalIntegrationLower'])
-		self.SIU = float(self.config['General']['signalIntegrationUpper'])
-		self.PIL = float(self.config['General']['pedestalIntegrationLower'])
-		self.PIU = float(self.config['General']['pedestalIntegrationUpper'])
+		self.SIL = float(self.config['Integration']['signalIntegrationLower'])
+		self.SIU = float(self.config['Integration']['signalIntegrationUpper'])
+		self.PIL = float(self.config['Integration']['pedestalIntegrationLower'])
+		self.PIU = float(self.config['Integration']['pedestalIntegrationUpper'])
 		
 		#[SpikeRejection]
-		self.voltageThreshold = float(self.config['General']['voltageThreshold'])
-		self.timeThreshold = int(self.config['General']['timeThreshold'])
+		self.voltageThreshold = float(self.config['SpikeRejection']['voltageThreshold'])
+		self.timeThreshold = int(self.config['SpikeRejection']['timeThreshold'])
 
 		#Calculate some values
 		#Conversion factors and array starts and stops
@@ -175,44 +175,25 @@ class traceExtractor:
 		
 	##########	
 	
-	def extractPandasSubtrace(self, traceData, run, limits, invert=False):
+	def extractPandasSubtraces(self, traceData, limit, invert=False):
 		
 		if invert==False:
-			traceData[run] = traceData[run][limits[0]:limits[1]]
-			return traceData
+			return traceData[:][limit[0]:limit[1]]
 		else:
-			traceData[run] = -1*traceData[run][limits[0]:limits[1]]
-			return traceData
-
-	def extractDualPandasSubtrace(self, traceData, runs, limits1, limits2, invert=False):
-		
-		if invert==False:
-			traceData[runs[0]] = traceData[runs[0]][limits1[0]:limits1[1]]
-			traceData[runs[1]] = traceData[runs[1]][limits2[0]:limits2[1]]
-			return traceData
-		else:
-			traceData[runs[0]] = -1*traceData[runs[0]][limits1[0]:limits1[1]]
-			traceData[runs[1]] = -1*traceData[runs[1]][limits2[0]:limits2[1]]
-			return traceData
-		
-	def extractPandasSubtraces(self, traceData, limits, invert=False):
-		
-		if invert==False:
+			return -1*traceData[:][limit[0]:limit[1]]
 			
-			return traceData[:][limits[0]:limits[1]]
-		else:
-			return -1*traceData[:][limits[0]:limits[1]]
-			
-	def extractDualPandasSubtraces(self, traceData, limits1, limits2, invert=False):
+	def extractDualPandasSubtraces(self, traceData, limits, invert=False):
+		
+		returnData = traceData.copy(deep=True)
 		
 		if invert==False:
-			traceData[traceData.columns[0::2]] = traceData[traceData.columns[0::2]][limits1[0]:limits1[1]]
-			traceData[traceData.columns[1::2]] = traceData[traceData.columns[1::2]][limits2[0]:limits2[1]]
-			return traceData
+			returnData[returnData.columns[0::2]] = returnData[returnData.columns[0::2]][limits[0][0]:limits[0][1]]
+			returnData[returnData.columns[1::2]] = returnData[returnData.columns[1::2]][limits[1][0]:limits[1][1]]
+			return returnData
 		else:
-			traceData[traceData.columns[0::2]] = -1*traceData[traceData.columns[0::2]][limits1[0]:limits1[1]]
-			traceData[traceData.columns[1::2]] = -1*traceData[traceData.columns[1::2]][limits2[0]:limits2[1]]
-			return traceData
+			returnData[returnData.columns[0::2]] = -1*returnData[returnData.columns[0::2]][limits[0][0]:limits[0][1]]
+			returnData[returnData.columns[1::2]] = -1*returnData[returnData.columns[1::2]][limits[1][0]:limits[1][1]]
+			return returnData
 		
 	#Extracts a subset of given numpy array based on limits. Optional invert.
 	def extractSubtrace(self, traceData, limits, invert= False):
@@ -259,15 +240,7 @@ class traceExtractor:
 
 		
 	##########	
-	
-	def sumPandasTrace(self, traceData, run):
-	
-		return traceData[run].sum()
-	
-		
-	def sumDualPandasTrace(self, traceData, runs, run2):
-		
-		return traceData[runs].sum()
+
 		
 	def sumPandasTraces(self, traceData):
 		
@@ -407,21 +380,28 @@ class traceExtractor:
 	
 	def pandasSpikeRejection(self, traceData, limits, voltageThreshold, timeThreshold, saveSpikes=False):
 		
-		for i, columns in enumerate(traceData[0::2]):
-			
-			if (len(np.where(traceData['channel1_'+str(i)][limits[0]:limits[1]] < voltageThreshold)[0]) < timeThreshold) and saveSpikes==True:
-				if i==0:
+		k=0
+		j=0
+		for i, columns in enumerate(traceData.columns[0::2]):
+			#print(str(i))
+			if (len(np.where(traceData['channel1_'+str(i)][limits[0]:limits[1]] < voltageThreshold)[0]) <= timeThreshold) and saveSpikes==True:
+				#print('in')
+				if k==0:
+					#print('i eq 0')
 					savedSpikes= pd.DataFrame(traceData['channel1_'+str(i)])
 					savedSpikes['channel2_'+str(i)] = traceData['channel2_'+str(i)]
 				else:
+					#print('else')
 					savedSpikes[['channel1_'+str(i),'channel2_'+str(i)]] = traceData[['channel1_'+str(i),'channel2_'+str(i)]]
+				k += 1
 			elif(len(np.where(traceData['channel1_'+str(i)][limits[0]:limits[1]] < voltageThreshold)[0]) > timeThreshold):
-				if i==0:
+				if j==0:
 					returnData = pd.DataFrame(traceData['channel1_'+str(i)])
 					returnData['channel2_'+str(i)] = traceData['channel2_'+str(i)]
 				else:
 					returnData[['channel1_'+str(i),'channel2_'+str(i)]] = traceData[['channel1_'+str(i),'channel2_'+str(i)]]
-		print(str(len(returnData))+' accepted, '+str(len(savedSpikes))+' rejected')
+				j += 1
+		print(str(len(returnData.columns[0::2]))+' accepted, '+str(len(savedSpikes.columns[0::2]))+' rejected')
 		if saveSpikes == True:
 			return (returnData, savedSpikes)
 		else:
@@ -453,7 +433,7 @@ class traceExtractor:
 		
 		label = 'channel1_'
 		
-		for i, element in enumerate(self, traceList, indexArray):
+		for i, element in enumerate(traceList):
 			
 			if i == 0:
 				d = {label+str(i):element[:]}
@@ -476,7 +456,7 @@ class traceExtractor:
 		
 			else:
 				dataFrameReturned[label1+str(i)], dataFrameReturned[label2+str(i)] = [element[:,0],element[:,1]]
-		
+				
 		return dataFrameReturned
 		
 	def saveTraceToh5(self, traceList, tracePrefix):
@@ -580,7 +560,36 @@ class tracePlotter:
 		plt.show()
 		plt.close()
 		
+	def pedestalDualPandasPlot(self, pedSum, PIL, PIU, legendObject1, legendObject2, units, fileName):
+		
+		myFont = {'fontname':'Liberation Serif'}
+		plt.figure(figsize=(9,6), dpi=100)
+		bins = np.linspace(pedSum.min(),np.max(3*pedSum[0::2].median(),3*pedSum[1::2].median()),200)
+		plt.title('Summed Pedestal Distribution (Interval: ['+str(PIL)+' '+units+', '+str(PIU)+' '+units+'])',**myFont)
+		plt.ylabel('Number of Events [$N$]',**myFont)
+		plt.xlabel('-1$\cdot$Summed Voltage[$mV$]',**myFont)
+		plt.hist(pedSum[0::2], bins, alpha=1., label=legendObject1,color='blue')
+		plt.hist(pedSum[1::2], bins, alpha=1., label=legendObject2,color='red')
+		plt.legend(loc='upper right')
+		plt.savefig(fileName,dpi=500)
+		plt.show()
+		plt.close()
+		
 	def plotPHD(self, sums, SIL, SIU, bins, title, legendObject, units, color, n, fileName):
+		
+		myFont = {'fontname':'Liberation Serif'}
+		plt.figure(figsize=(9,6), dpi=100)
+		plt.title(title+' (Interval: ['+str(SIL)+' '+units+', '+str(SIU)+' '+units+'])',**myFont)
+		plt.ylabel('Number of Events [$N$]',**myFont)
+		plt.xlabel('-1$\cdot$Summed Voltage[$mV$]',**myFont)
+		plt.hist(sums, bins, alpha=1.0, label=legendObject,color=color)
+		plt.ylim(0,n)
+		plt.legend(loc='upper right')
+		plt.savefig(fileName,dpi=500)
+		plt.show()
+		plt.close()
+		
+	def plotPandasPHD(self, sums, SIL, SIU, bins, title, legendObject, units, color, n, fileName):
 		
 		myFont = {'fontname':'Liberation Serif'}
 		plt.figure(figsize=(9,6), dpi=100)
@@ -636,5 +645,35 @@ class tracePlotter:
 		plt.plot([PIU,PIU],[VS,VE],color='purple',linestyle="--",alpha=0.65)
 		plt.savefig(fileName,dpi=500)
 		plt.close()		
+		
+		
+	def plotDualPandasTrace(self, trace1, trace2, HStart, HStop, HSN, HGN, VS, VE, VGN,
+		title, units, SIL, SIU, PIL, PIU, color1, color2, label1, label2, fileName):
+		
+		myFont = {'fontname':'Liberation Serif'}
+		plt.figure(figsize=(9,6), dpi=100)
+		plt.subplot(111)
+		#code.interact(local=locals())
+		#sys.exit('Code Break!')
+		x = np.linspace(HStart,HStop,HSN)
+		plt.plot(x, trace1, color=color1, linewidth=0.5, linestyle="-")	
+		plt.plot(x, trace2, color=color2, linewidth=0.5, linestyle="-")
+		plt.xticks(np.linspace(HStart, HStop, HGN+1,endpoint=True),**myFont)
+		plt.ylim(VS,VE)
+		plt.yticks(np.linspace(VS, VE, VGN+1, endpoint=True),**myFont)
+		plt.grid(True)
+		blue_patch = mpatches.Patch(color=color1, label=label1)
+		red_patch = mpatches.Patch(color=color2, label=label2)
+		mpl.rc('font',family='Liberation Serif')
+		plt.legend(loc='lower right',handles=[red_patch,blue_patch])
+		plt.title(title,**myFont)
+		plt.xlabel('Time Relative to Trigger ['+units+']',**myFont)
+		plt.ylabel('Voltage [$V$]',**myFont)		
+		plt.plot([SIL,SIL],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
+		plt.plot([SIU,SIU],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
+		plt.plot([PIL,PIL],[VS,VE],color='purple',linestyle="--",alpha=0.65)
+		plt.plot([PIU,PIU],[VS,VE],color='purple',linestyle="--",alpha=0.65)
+		plt.savefig(fileName,dpi=500)
+		plt.close()	
 		
 		
