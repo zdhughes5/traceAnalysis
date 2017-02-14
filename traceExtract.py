@@ -38,10 +38,11 @@ os.chdir(str(te.workingDir))
 #Read in files, return (linesChannel1, linesChannel2)
 #set up window time interval
 #create the traceList
-print('Reading in lines...')
+print('Reading in lines... (this takes a a lot of of memory!)')
 lines = te.openDualRawTraceFile(te.channel1, te.channel2)
 interval = np.linspace(te.horizontalSymmetricStartPhys,te.horizontalSymmetricStopPhys,te.horizontalSampleNumber)
 traceList = te.dualTraceToPandas(te.extractDualRawTraces(lines), interval)
+del lines, interval
 
 #Save if needed.
 if te.saveData == True:
@@ -57,35 +58,35 @@ if te.saveData == True:
 
 #Extract the pedestal region from the CsI and WLS Fiber traces
 #Sum the pedestal region
-pedestalTraces = te.extractDualPandasSubtraces(traceList, [te.pedestalLimitsPhys, te.pedestalLimitsPhys], invert = False)
-pedestalSums = te.sumPandasTraces(pedestalTraces)
+pedestalTraces = te.extractDualSubtraces(traceList, [te.pedestalLimitsPhys, te.pedestalLimitsPhys], invert = False)
+pedestalSums = te.sumTraces(pedestalTraces)
 del pedestalTraces
 
 #Invert the traces for nicer histograming.
-pedestalTracesInverted = te.extractDualPandasSubtraces(traceList, [te.pedestalLimitsPhys, te.pedestalLimitsPhys], invert = True)
-pedestalSumsInverted = te.sumPandasTraces(pedestalTracesInverted)
+pedestalTracesInverted = te.extractDualSubtraces(traceList, [te.pedestalLimitsPhys, te.pedestalLimitsPhys], invert = True)
+pedestalSumsInverted = te.sumTraces(pedestalTracesInverted)
 del pedestalTracesInverted
 
 #Calculate the pedestal offsets and correct the traceList based on offsets
 #offsets is a tuple of the channel offsets. (channel1Offset, channel2Offset)
 #correct the whole traceList list. Delete the old one.
-offsets = te.getDualPandasAvgMedian(pedestalSums, [te.pedestalIntervalImag,te.pedestalIntervalImag], invert = False)
-traceListCorrected = te.pedestalDualPandasSubtractions(traceList, offsets)
+offsets = te.getDualAvgMedian(pedestalSums, [te.pedestalIntervalImag,te.pedestalIntervalImag], invert = False)
+traceListCorrected = te.pedestalDualSubtractions(traceList, offsets)
 del traceList, pedestalSums
 
 #Do spike rejection of traceList based on signal region
 #Extract singal region from all corrected traces, invert because these are only used in sums/histograms
-traceListSpikesRej = te.pandasSpikeRejection(traceListCorrected, [te.SIL,te.SIU], te.voltageThreshold, te.timeThreshold, saveSpikes=True)
+traceListSpikesRej = te.spikeRejection(traceListCorrected, [te.SIL,te.SIU], te.voltageThreshold, te.timeThreshold, saveSpikes=True)
 
 #Get signal subregions
-signalTracesCor = te.extractDualPandasSubtraces(traceListCorrected, [te.signalLimitsPhys,te.signalLimitsPhys], invert=True)
-signalTracesAccpt = te.extractDualPandasSubtraces(traceListSpikesRej[0], [te.signalLimitsPhys,te.signalLimitsPhys], invert = True)
-signalTracesRej = te.extractDualPandasSubtraces(traceListSpikesRej[1], [te.signalLimitsPhys,te.signalLimitsPhys], invert = True)
+signalTracesCor = te.extractDualSubtraces(traceListCorrected, [te.signalLimitsPhys,te.signalLimitsPhys], invert=True)
+signalTracesAccpt = te.extractDualSubtraces(traceListSpikesRej[0], [te.signalLimitsPhys,te.signalLimitsPhys], invert = True)
+signalTracesRej = te.extractDualSubtraces(traceListSpikesRej[1], [te.signalLimitsPhys,te.signalLimitsPhys], invert = True)
 
 #Sum the signal regions for all, accepted, and rejected trials
-signalSums = te.sumPandasTraces(signalTracesCor)
-signalSumsAccpt = te.sumPandasTraces(signalTracesAccpt)
-signalSumsRej = te.sumPandasTraces(signalTracesRej)
+signalSums = te.sumTraces(signalTracesCor)
+signalSumsAccpt = te.sumTraces(signalTracesAccpt)
+signalSumsRej = te.sumTraces(signalTracesRej)
 print('TraceListCorrected size: '+str(sys.getsizeof(traceListCorrected)))
 del signalTracesCor, signalTracesAccpt, signalTracesRej, traceListCorrected
 
