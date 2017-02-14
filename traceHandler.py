@@ -112,13 +112,6 @@ class traceExtractor:
 		print('Physical-to-image signal integration window map: [ '+str(self.SIL)+','+str(self.SIU)+' ] --> [ '+str(self.iSIL)+','+str(self.iSIU)+' ]')
 		print('Physical-to-image pedestal integration window map: [ '+str(self.PIL)+','+str(self.PIU)+' ] --> [ '+str(self.iPIL)+','+str(self.iPIU)+' ]')
 	
-		
-	##########	
-		
-	#Turns two numpy arrays column stacked 2d numpy array.
-	def packageTrace(self, trace1, trace2):
-		
-		return np.column_stack((trace1,trace2))
 
 		
 	##########	
