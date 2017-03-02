@@ -12,6 +12,7 @@ from sys import argv
 import code
 import sys
 import traceHandler
+import pandas as pd
 
 #My janky debugger since I'm used to IDL's STOP command
 def codePause():
@@ -30,26 +31,9 @@ config.read(configFile)
 print('Begin trace extraction...')
 te = traceHandler.traceExtractor(config)
 te.setupClassVariables()
-
-#Move into directories.
-print('Moving into working directory: '+str(te.workingDir)+'...')
-os.chdir(str(te.workingDir))
-
-#Read in files, return (linesChannel1, linesChannel2)
-#set up window time interval
-#create the traceList
-print('Reading in lines... (this takes a a lot of of memory!)')
-lines = te.openDualRawTraceFile(te.channel1, te.channel2)
-interval = np.linspace(te.horizontalSymmetricStartPhys,te.horizontalSymmetricStopPhys,te.horizontalSampleNumber)
-traceList = te.dualTraceToPandas(te.extractDualRawTraces(lines), interval)
-del lines, interval
-
-#Save if needed.
-if te.saveData == True:
-	os.chdir(str(te.dataFolder))
-	te.saveTraceToh5(traceList, te.saveFilename)
-	os.chdir(str(te.workingDir))
-	
+code.interact(local=locals())
+sys.exit('Code Break!')
+traceList = te.initializeData()	
 
 ############################################################
 #Ok, data preparation is over; it's time for number crunching.
@@ -99,7 +83,7 @@ if te.savePlots == True:
 	tp = traceHandler.tracePlotter(config)
 
 	#Plot the pedestal distributions
-	tp.pedestalDualPandasPlot(pedestalSumsInverted, te.PIL, te.PIU, 'CsI Trace', 'WLS Fiber Trace',te.horizontalUnits, '12_Summed_Pedestal_Distribution.png')
+	tp.pedestalDualPlot(pedestalSumsInverted, te.PIL, te.PIU, 'CsI Trace', 'WLS Fiber Trace',te.horizontalUnits, '12_Summed_Pedestal_Distribution.png')
 
 	#Fake histograms to get parameters
 	binsCsI = np.linspace(np.min(signalSums[0::2]),5*signalSums[0::2].median(),100)
@@ -113,19 +97,19 @@ if te.savePlots == True:
 
 
 	#Make the three types of trace histogram plots for the CsI and WLS (6 total).
-	tp.plotPandasPHD(signalSums[0::2], te.SIL, te.SIU, binsCsI, 'Uncorrected CsI PHD', 'CsI Trace Sums', 
+	tp.plotPHD(signalSums[0::2], te.SIL, te.SIU, binsCsI, 'Uncorrected CsI PHD', 'CsI Trace Sums', 
 		te.horizontalUnits, 'blue', nCsI, '1_Summed_PHDPandas_Full.png')
-	tp.plotPandasPHD(signalSums[1::2], te.SIL, te.SIU, binsWLS, 'Uncorrected WSL Fiber PHD', 'WLS Fiber Trace Sums',
+	tp.plotPHD(signalSums[1::2], te.SIL, te.SIU, binsWLS, 'Uncorrected WSL Fiber PHD', 'WLS Fiber Trace Sums',
 		te.horizontalUnits, 'red', nWLS, '2_Summed_PHDPandas_Full.png')
 
-	tp.plotPandasPHD(signalSumsAccpt[0::2], te.SIL, te.SIU, binsCsI, 'Corrected CsI PHD', 'CsI Trace Sums',
+	tp.plotPHD(signalSumsAccpt[0::2], te.SIL, te.SIU, binsCsI, 'Corrected CsI PHD', 'CsI Trace Sums',
 		te.horizontalUnits, 'blue', nCsI, '1_Summed_PHDPandas_Accepted.png')
-	tp.plotPandasPHD(signalSumsAccpt[1::2], te.SIL, te.SIU, binsWLS, 'Corrected WSL Fiber PHD', 'WLS Fiber Trace Sums',
+	tp.plotPHD(signalSumsAccpt[1::2], te.SIL, te.SIU, binsWLS, 'Corrected WSL Fiber PHD', 'WLS Fiber Trace Sums',
 		te.horizontalUnits, 'red', nWLS, '2_Summed_PHDPandas_Accepted.png')
 
-	tp.plotPandasPHD(signalSumsRej[0::2], te.SIL, te.SIU, binsCsI, 'Rejected CsI PHD', 'CsI Trace Sums',
+	tp.plotPHD(signalSumsRej[0::2], te.SIL, te.SIU, binsCsI, 'Rejected CsI PHD', 'CsI Trace Sums',
 		te.horizontalUnits, 'blue', nCsI, '1_Summed_PHDPandas_Rejected.png')
-	tp.plotPandasPHD(signalSumsRej[1::2], te.SIL, te.SIU, binsWLS, 'Rejected WSL Fiber PHD', 'WLS Fiber Trace Sums',
+	tp.plotPHD(signalSumsRej[1::2], te.SIL, te.SIU, binsWLS, 'Rejected WSL Fiber PHD', 'WLS Fiber Trace Sums',
 		te.horizontalUnits, 'red', nWLS, '2_Summed_PHDPandas_Rejected.png')
 
 		
@@ -133,7 +117,7 @@ if te.savePlots == True:
 	
 		if (i in [0,1,2,3,4,5,6,7,8,9]) or ((i % 100) == 0):
 		
-			tp.plotDualPandasTrace(traceListSpikesRej[0][traceListSpikesRej[0][traceListSpikesRej[0].columns[0::2]].columns[i]],traceListSpikesRej[0][traceListSpikesRej[0][traceListSpikesRej[0].columns[1::2]].columns[i]], te.horizontalSymmetricStartPhys, 
+			tp.plotDualTrace(traceListSpikesRej[0][traceListSpikesRej[0][traceListSpikesRej[0].columns[0::2]].columns[i]],traceListSpikesRej[0][traceListSpikesRej[0][traceListSpikesRej[0].columns[1::2]].columns[i]], te.horizontalSymmetricStartPhys, 
 				te.horizontalSymmetricStopPhys, te.horizontalSampleNumber, te.horizontalGridNumber,
 				te.veritcalStart, te.verticalEnd, te.verticalGridNumber, 'APT Raw Detector Trace',
 				te.horizontalUnits, te.SIL, te.SIU, te.PIL, te.PIU, 'blue', 'red', 'CsI PMT', 'WLS Fiber PMT',
