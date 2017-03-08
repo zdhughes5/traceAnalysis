@@ -14,6 +14,8 @@ import matplotlib.patches as mpatches
 import pandas as pd
 from configparser import ConfigParser, ExtendedInterpolation
 import os
+import subprocess
+from math import sqrt
 
 def codePause():
 	code.interact(local=locals())
@@ -23,11 +25,19 @@ def codePause():
 #so that main scripts can easily just call them and do analysis.
 class traceExtractor:
 	
-	def __init__(self, config = None):
+	def __init__(self, config = None, c = None):
 		self.config = config if config is not None else sys.exit('No config found for traceExtractor. Aborting.')
-
-	#Reads in values from config and meta files and creates all forseeable variables.		
+		self.c = c if c is not None else colors()
+		
+	#Reads in values from config and meta files and creates all forseeable *static* variables.
+	#meta file = file that describes oscilliscope settings	
 	def setupClassVariables(self):
+		
+		def getDefaultColor(self):
+			self.currentColor += 1
+			if self.currentColor == len(self.defaultColors):
+				self.currentColor = -1
+			return self.defaultColors[self.currentColor]
 
 		def _absoluteParsX(self):
 			
@@ -38,73 +48,132 @@ class traceExtractor:
 			iSIU = int(round(self.SIU*self.xConversionPtoI))
 			iPIL = int(round(self.PIL*self.xConversionPtoI))
 			iPIU = int(round(self.PIU*self.xConversionPtoI))
-			
-			return (xRange, xRangeImage, xTicks, iSIL, iSIU, iPIL, iPIU)
+			x = np.linspace(xRange[0], xRange[1], self.sample)
+			xWidthUnit = self.xWidthUnit
+			selection = 'absolute'
+		
+			return (xRange, xRangeImage, x, xTicks, iSIL, iSIU, iPIL, iPIU, xWidthUnit, selection)
 			
 			
 		def _relativeParsX(self):
 			
-			xRange = ( -1*(self.xWidthPhysical/2-self.xLocation), self.xWidthPhysical/2+self.xLocation )
-			xRangeImage = ( int(round(xRange[0]*self.xConversionPtoI)), int(round(xRange[1]*self.xConversionPtoI)))
+			xRange = ( -1*(self.xWidthPhysical/2+self.xLocation), self.xWidthPhysical/2-self.xLocation )
+			xRangeImage = ( int(0),  int(self.sample))
 			if self.xRelativeGrid == True:
 				leftTick = -1*self.xWidthPhysical/self.xDivs
 				rightTick =  self.xWidthPhysical/self.xDivs
 				xTicks = np.array([0])
-				while leftTick >= xRange[0]:
-					xTicks = np.insert(xTicks, 0, leftTick)
-					leftTick += -1*self.xWidthPhysical/self.xDivs
 				while rightTick <= xRange[1]:
 					xTicks = np.append(xTicks, rightTick)
-					rightTick += self.xWidthPhysical/self.xDivs					
+					rightTick += self.xWidthPhysical/self.xDivs	
+				while leftTick >= xRange[0]:
+					xTicks = np.insert(xTicks, 0, leftTick)
+					leftTick += -1*self.xWidthPhysical/self.xDivs				
 			elif self.xRelativeGrid == False:	
 				xTicks = np.linspace(xRange[0], xRange[1], self.xDivs+1)
 			#xRangeInterval = np.linspace(-1*self.xWidthPhysical/2, self.xWidthPhysical/2, self.xDivs+1)+self.xLocation
-			iSIL = int(round((self.SIL+self.xLocation)*self.xConversionPtoI))
-			iSIU = int(round((self.SIU+self.xLocation)*self.xConversionPtoI))
-			iPIL = int(round((self.PIL+self.xLocation)*self.xConversionPtoI))
-			iPIU = int(round((self.PIU+self.xLocation)*self.xConversionPtoI))
+			#code.interact(local=locals())
+			#sys.exit('Code Break!')			
+			iSIL = int(round((self.SIL+self.xWidthPhysical/2+self.xLocation)*self.xConversionPtoI))
+			iSIU = int(round((self.SIU+self.xWidthPhysical/2+self.xLocation)*self.xConversionPtoI))
+			iPIL = int(round((self.PIL+self.xWidthPhysical/2+self.xLocation)*self.xConversionPtoI))
+			iPIU = int(round((self.PIU+self.xWidthPhysical/2+self.xLocation)*self.xConversionPtoI))
+			x = np.linspace(xRange[0], xRange[1], self.sample)
+			xWidthUnit = self.xWidthUnit
+			selection = 'relative'
 		
-				
-			return (xRange, xRangeImage, xTicks, iSIL, iSIU, iPIL, iPIU)
+			return (xRange, xRangeImage, x, xTicks, iSIL, iSIU, iPIL, iPIU, xWidthUnit, selection)
 			
 		def _symmetricParsX(self):
 			
 			xRange = ( -1*self.xWidthPhysical/2, self.xWidthPhysical/2 )
-			xRangeImage = ( int(round(xRange[0]*self.xConversionPtoI)), int(round(xRange[1]*self.xConversionPtoI)))
+			xRangeImage = ( int(0),  int(self.sample))
 			xTicks = np.linspace(xRange[0], xRange[1], self.xDivs+1)
-			iSIL = int(round((self.SIL+xRange[1])*self.xConversionPtoI))
-			iSIU = int(round((self.SIU+xRange[1])*self.xConversionPtoI))
-			iPIL = int(round((self.PIL+xRange[1])*self.xConversionPtoI))
-			iPIU = int(round((self.PIU+xRange[1])*self.xConversionPtoI))
+			iSIL = int(round((self.SIL+self.xWidthPhysical/2)*self.xConversionPtoI))
+			iSIU = int(round((self.SIU+self.xWidthPhysical/2)*self.xConversionPtoI))
+			iPIL = int(round((self.PIL+self.xWidthPhysical/2)*self.xConversionPtoI))
+			iPIU = int(round((self.PIU+self.xWidthPhysical/2)*self.xConversionPtoI))
+			x = np.linspace(xRange[0], xRange[1], self.sample)
+			xWidthUnit = self.xWidthUnit
+			selection = 'symmetric'
 		
-			return (xRange, xRangeImage, xTicks, iSIL, iSIU, iPIL, iPIU)
+			return (xRange, xRangeImage, x, xTicks, iSIL, iSIU, iPIL, iPIU, xWidthUnit, selection)
 
-		def _relativeParsY(self):
-			yRange = (-1*self.scale*self.yDivs/2-self.yLocation1, self.scale*self.yDivs/2-self.yLocation1 )
-			yTicks = np.linspace(yRange[0], yRange[1], self.xDivs+1)
+		def _relativeParsY(self, scale):
+			yRange = (-1*scale*self.yDivs/2-self.yLocation1*scale, scale*self.yDivs/2-self.yLocation1*scale )
+			yTicks = np.linspace(yRange[0], yRange[1], self.yDivs+1)
 			
 			return (yRange, yTicks)
 			
-		def _symmetricParsY(self):
-			yRange = ( -1*self.scale*self.yDivs/2, self.scale*self.yDivs/2 )
-			yTicks = np.linspace(yRange[0], yRange[1], self.xDivs+1)
+		def _symmetricParsY(self, scale):
+			yRange = ( -1*scale*self.yDivs/2, scale*self.yDivs/2 )
+			yTicks = np.linspace(yRange[0], yRange[1], self.yDivs+1)
 			
 			return (yRange, yTicks)
 			
-		def _getPars(self, f):
+		def _getParsX(self, f):
 			
 			def wrapper():
-				xRange, xRangeImage, xTicks, iSIL, iSIU, iPIL, iPIU = f(self)
-				WindowPars = {
+				
+				xRange, xRangeImage, x, xTicks, iSIL, iSIU, iPIL, iPIU, xWidthUnit, selection = f(self)
+				
+				signalLimitsPhys = (self.SIL, self.SIU)
+				signalLimitsImag = (iSIL, iSIU)
+				pedestalLimitsPhys = (self.PIL, self.PIU)
+				pedestalLimitsImag = (iPIL, iPIU)
+
+				signalIntervalPhys = self.SIU - self.SIL
+				signalIntervalImag = iSIU - iSIL
+				pedestalIntervalPhys = self.PIU - self.PIL
+				pedestalIntervalImag = iPIU - iPIL
+				
+				windowPars = {
 					'xRange' : xRange,
-					'xRangeImage' : xRangeImage,
 					'xTicks' : xTicks,
-					'iSIL' : iSIL,
-					'iSIU' : iSIU,
-					'iPIL' : iPIL,
-					'iPIU' : iPIU
+					'x' : x,
+					'SIL' : self.SIL,
+					'SIU' : self.SIU,
+					'PIL' : self.PIL,
+					'PIU' : self.PIU,
+					'signalLimits' : signalLimitsPhys,
+					'pedestalLimits' : pedestalLimitsPhys,
+					'signalInterval' : signalIntervalPhys,
+					'pedestalInterval' : pedestalIntervalPhys,
+					'xWidthUnit' : xWidthUnit,
+					'selection' : selection
 					}
-				return WindowPars
+				dataPars = {
+					'xRange' : xRangeImage,
+					'SIL' : iSIL,
+					'SIU' : iSIU,
+					'PIL' : iPIL,
+					'PIU' : iPIU,
+					'signalLimits' : signalLimitsImag,
+					'pedestalLimits' : pedestalLimitsImag,
+					'signalInterval' : signalIntervalImag,
+					'pedestalInterval' : pedestalIntervalImag
+					}	
+					
+				return windowPars, dataPars
+				
+			return wrapper
+			
+		def _getParsY(self, f, scale, objectName):
+			
+			def wrapper():
+				
+				yRange, yTicks = f(self, scale)
+				windowPars = {
+					'yRange' : yRange,
+					'yTicks' : yTicks,
+					'scale' : scale,
+					'object' : objectName,
+					'color' : getDefaultColor(self)
+					}
+				dataPars = {
+					}
+					
+				return windowPars, dataPars
 				
 			return wrapper
 		
@@ -113,6 +182,7 @@ class traceExtractor:
 		#[General]
 		self.workingDir = Path(self.config['General']['workingDir'])
 		self.dataDir = Path(self.config['General']['dataDir'])	
+		self.ansiColors = self.config['General'].getboolean('ansiColors')
 		self.load = self.config['General'].getboolean('load')
 		self.loadFrom = self.dataDir/self.config['General']['loadFrom']
 		self.meta = self.dataDir/self.config['General']['meta']
@@ -137,6 +207,8 @@ class traceExtractor:
 		self.yPlotSelection[self.yPlotType.lower()] = True
 		self.reproduceOscilliscope = self.config['Window'].getboolean('reproduceOscilliscope')
 		self.xRelativeGrid = self.config['Window'].getboolean('xRelativeGrid')
+		self.defaultColors = ['blue', 'red', 'green', 'cyan', 'magenta', 'yellow', 'black']
+		self.currentColor = -1
 		
 		#meta file->[General]
 		self.metaConfig = ConfigParser(interpolation=ExtendedInterpolation(),inline_comment_prefixes=('#'))
@@ -144,17 +216,19 @@ class traceExtractor:
 		self.xWidthPhysical = float(self.metaConfig['General']['xWidthPhysical'])
 		self.xWidthUnit = self.metaConfig['General']['xWidthUnit']
 		self.yHeightUnits = self.metaConfig['General']['yHeightUnits']
-		self.xLocation = float(self.metaConfig['General']['xLocation'])
+		self.xLocation = -1*float(self.metaConfig['General']['xLocation'])
 		self.sample = float(self.metaConfig['General']['sample'])
 		self.xDivs = float(self.metaConfig['General']['xDivs'])
 		self.yDivs = float(self.metaConfig['General']['yDivs'])
 		
 		#[channel1]
+		self.object1 = self.metaConfig['Channel1']['object']
 		self.VoltsPerDiv1 = float(self.metaConfig['Channel1']['VoltsPerDiv'])
 		self.yLocation1 = float(self.metaConfig['Channel1']['yLocation'])
 		
 		#[channel2]
-		if self.doubleChannel == True:	
+		if self.doubleChannel == True:
+			self.object2 = self.metaConfig['Channel2']['object']
 			self.VoltsPerDiv2 = float(self.metaConfig['Channel2']['VoltsPerDiv'])
 			self.yLocation2 = float(self.metaConfig['Channel2']['yLocation'])
 		#parse unit for plot axis
@@ -178,9 +252,11 @@ class traceExtractor:
 			self.sampleBG = float(self.metaConfigBG['General']['sample'])
 			self.xDivsBG = float(self.metaConfigBG['General']['xDivs'])
 			self.yDivsBG = float(self.metaConfigBG['General']['yDivs'])
+			self.objectBG1 = self.metaConfigBG['Channel1']['object']
 			self.VoltsPerDivBG1 = float(self.metaConfigBG['Channel1']['VoltsPerDiv'])
 			self.yLocationBG1 = float(self.metaConfigBG['Channel1']['yLocation'])
-			if self.doubleChannel == True:		
+			if self.doubleChannel == True:
+				self.objectBG2 = self.metaConfigBG['Channel2']['object']
 				self.VoltsPerDivBG2 = float(self.metaConfigBG['Channel2']['VoltsPerDiv'])
 				self.yLocationBG2 = float(self.metaConfigBG['Channel2']['yLocation'])	
 
@@ -194,62 +270,45 @@ class traceExtractor:
 		self.voltageThreshold = float(self.config['SpikeRejection']['voltageThreshold'])
 		self.timeThreshold = int(self.config['SpikeRejection']['timeThreshold'])
 
+		##############################
 		#Calculate some values
+		##############################
+		
 		#Conversion factors
 		self.xConversionDtoP = self.xWidthPhysical/self.xDivs #Turns division points/ticks into physicsal marks
 		self.xConversionPtoI = self.sample/self.xWidthPhysical #Turns physical units into array index
 
-		#Window specific parameters
+		#Window, data specific parameters
 		if self.xPlotSelection['absolute'] == True:
-			self.windowParameters = _getPars(self, _absoluteParsX)()
+			self.windowParametersX, self.dataParametersX = _getParsX(self, _absoluteParsX)()
 		elif self.xPlotSelection['relative'] == True:
-			self.windowParameters = _getPars(self, _relativeParsX)()
+			self.windowParametersX, self.dataParametersX = _getParsX(self, _relativeParsX)()
 		elif self.xPlotSelection['symmetric'] == True:
-			self.windowParameters = _getPars(self, _symmetricParsX)()
+			self.windowParametersX, self.dataParametersX = _getParsX(self, _symmetricParsX)()
 		else:
 			sys.exit('Something wrong in getting the x-axis window parameters!')
-			
-			
-		
-		self.signalLimitsPhys = [self.SIL, self.SIU]
-		self.signalLimitsImag = [self.windowParameters['iSIL'], self.windowParameters['iSIU']]
-		self.pedestalLimitsPhys = [self.PIL, self.PIU]
-		self.pedestalLimitsImag = [self.windowParameters['iPIL'], self.windowParameters['iPIU']]
-
-		self.signalIntervalPhys = self.SIU - self.SIL
-		self.signalIntervalImag = self.windowParameters['iSIU'] - self.windowParameters['iSIL']
-		self.pedestalIntervalPhys = self.PIU - self.PIL
-		self.pedestalIntervalImag = self.windowParameters['iPIU'] - self.windowParameters['iPIL']
-	
-		if self.doubleChannel == True:		
-			self.scale = np.max([self.VoltsPerDiv1, self.VoltsPerDiv2])
-			if self.BGSubtraction == True:
-				self.scaleBG = np.max([self.VoltsPerDivBG1, self.VoltsPerDivBG2])
-				self.scale = np.max([self.scale, self.scaleBG])
-		else:
-			self.scale = self.VoltsPerDiv1
-			if self.BGSubtraction == True:
-				self.scaleBG = self.VoltsPerDivBG1
-				self.scale = np.max([self.VoltsPerDiv1, self.VoltsPerDivBG1])
 				
 		if self.yPlotSelection['relative'] == True:
-			self.yRange, self.yTicks = _relativeParsY(self)
+			self.windowParametersY1, self.dataParametersY1 = _getParsY(self, _relativeParsY, self.VoltsPerDiv1, self.object1)()
+			self.windowParametersY2, self.dataParametersY2 = _getParsY(self, _relativeParsY, self.VoltsPerDiv2, self.object2)()
 		elif self.yPlotSelection['symmetric'] == True:
-			self.yRange, self.yTicks = _symmetricParsY(self)
+			self.windowParametersY1, self.dataParametersY1 = _getParsY(self, _symmetricParsY, self.VoltsPerDiv1)()
+			self.windowParametersY2, self.dataParametersY2 = _getParsY(self, _symmetricParsY, self.VoltsPerDiv2)()
 		else:
-			sys.exit('Something wrong in getting the y-axis window parameters!')
-			
+			sys.exit('Something wrong in getting the y-axis window parameters!')	
+		#code.interact(local=locals())
+		#sys.exit('Code Break!')
 		
+		##############################			
 		#Print sanity check
-		print('Time for a sanity check...!')
-		print('Physical-to-image signal integration window map: [ '+str(self.SIL)+','+str(self.SIU)+' ] --> [ '+str(self.windowParameters['iSIL'])+','+str(self.windowParameters['iSIU'])+' ]')
-		print('Physical-to-image pedestal integration window map: [ '+str(self.PIL)+','+str(self.PIU)+' ] --> [ '+str(self.windowParameters['iPIL'])+','+str(self.windowParameters['iPIU'])+' ]')
+		##############################
+		print('Time for a sanity check...!\n')
+		print('Physical-to-image signal integration window map: '+self.c.cyan('[ '+str(self.windowParametersX['SIL'])+','+str(self.windowParametersX['SIU'])+' ] -->')+self.c.yellow(' [ '+str(self.dataParametersX['SIL'])+','+str(self.dataParametersX['SIU'])+' ]'))
+		print('Physical-to-image pedestal integration window map: '+self.c.cyan('[ '+str(self.windowParametersX['PIL'])+','+str(self.windowParametersX['PIU'])+' ] -->')+self.c.yellow(' [ '+str(self.dataParametersX['PIL'])+','+str(self.dataParametersX['PIU'])+' ]\n'))
 
-		print(self.windowParameters['xRange'])
-		print(self.windowParameters['xTicks'])
-		code.interact(local=locals())
-		sys.exit('Code Break!')
-
+		print('The x-axis range will be: '+self.c.blue('( '+str(self.windowParametersX['xRange'][0])+', '+str(self.windowParametersX['xRange'][1])+' )')+', with ticks at: ')
+		print(self.windowParametersX['xTicks'])
+		print('\n')
 		
 	##########	
 
@@ -294,7 +353,8 @@ class traceExtractor:
 		returnData = []
 		
 		for i, element in enumerate(channel1Data):
-			returnData.append(self.packageTrace(channel1Data[i],channel2Data[i]))
+			#returnData.append(self.packageTrace(channel1Data[i],channel2Data[i]))
+			returnData.append(np.column_stack((channel1Data[i],channel2Data[i])))
 			if saveTraces == True:
 				np.savetext(traceFilename+str(i)+returnData[i]+'.txt',fmt='%.6e')
 		
@@ -357,10 +417,12 @@ class traceExtractor:
 	#Correct for pedestal offsets		
 	def pedestalDualSubtractions(self, traceData, pedestalOffsets):
 		
-		traceData[traceData.columns[0::2]] = traceData[traceData.columns[0::2]].subtract(pedestalOffsets[0], axis='columns')
-		traceData[traceData.columns[1::2]] = traceData[traceData.columns[1::2]].subtract(pedestalOffsets[1], axis='columns')
+		returnData = traceData.copy(deep=True)
 		
-		return traceData
+		returnData[returnData.columns[0::2]] = returnData[returnData.columns[0::2]].subtract(pedestalOffsets[0], axis='columns')
+		returnData[returnData.columns[1::2]] = returnData[returnData.columns[1::2]].subtract(pedestalOffsets[1], axis='columns')
+		
+		return returnData
 		
 		
 	##########
@@ -370,6 +432,9 @@ class traceExtractor:
 		
 		k=0
 		j=0
+		returnData = None
+		savedSpikes = None
+		
 		
 		for i, columns in enumerate(traceData.columns[0::2]):
 			if (len(np.where(traceData['channel1_'+str(i)][limits[0]:limits[1]] < voltageThreshold)[0]) <= timeThreshold) and saveSpikes==True:
@@ -386,7 +451,7 @@ class traceExtractor:
 				else:
 					returnData[['channel1_'+str(i),'channel2_'+str(i)]] = traceData[['channel1_'+str(i),'channel2_'+str(i)]]
 				j += 1
-		print(str(len(returnData.columns[0::2]))+' accepted, '+str(len(savedSpikes.columns[0::2]))+' rejected')
+		#print(str(len(returnData.columns[0::2]))+' accepted, '+str(len(savedSpikes.columns[0::2]))+' rejected')
 		
 		if saveSpikes == True:
 			return (returnData, savedSpikes)
@@ -427,181 +492,384 @@ class traceExtractor:
 		
 		
 	def initializeData(self):
+		
+		subprocess.call('mkdir -p '+str(self.workingDir),shell=True)
 		try:
-			print('Moving into working directory: '+str(self.workingDir)+'...')
+			print('Moving into working directory: '+self.c.yellow(str(self.workingDir))+'...')
+			os.chdir(str(self.workingDir))
 		except NameError:
-			sys.exit('WorkingDir variable not found. Did you setupClassVariables?')
+			sys.exit(self.c.red('WorkingDir variable not found. Did you setupClassVariables?'))
 		
-		os.chdir(str(self.workingDir))
-		
-		#Read in files, return (linesChannel1, linesChannel2)
-		#set up window time interval
-		#create the traceList
 		if self.load == True:
-			traceList = pd.read_hdf('traceList_'+self.saveID+'.h5')
+			traceList = pd.read_hdf(str(self.dataDir/self.loadFrom))
 		else:
-			print('Reading in lines... (this takes a a lot of of memory!)')
+			print('Reading in lines... (this takes a lot of memory!)')
+			os.chdir(str(self.dataDir))
 			lines = self.openDualRawTraceFile(self.channel1, self.channel2)
-			interval = np.linspace(self.x,self.horizontalSymmetricStopPhys,self.horizontalSampleNumber)
-			traceList = self.dualTraceToPandas(self.extractDualRawTraces(lines), interval)
-			del lines, interval
-
+			traceList = self.dualTraceToPandas(self.extractDualRawTraces(lines), self.windowParametersX['x'])
+			del lines
 			#Save if needed.
 			if self.saveData == True:
 				traceList.to_hdf('traceList_'+self.saveID+'.h5', 'table')
+			os.chdir(str(self.workingDir))
 				
 		return traceList
 		
+
 class tracePlotter:
 		
 	def __init__(self, config = None):
 		self.config = config if config is not None else sys.exit('No config found for traceExtractor. Aborting.')
 
-	#Reads in values from config file and creates all forseeable variables.		
-	def setupClassVariables(self):
-
-		#Read in config variables
-		#[General]
-		self.workingDir = Path(self.config['General']['workingDir'])
-		self.dataDir = Path(self.config['General']['dataDir'])
-		self.channel1 = self.dataDir/self.config['General']['channel1']
-		self.channel2 = self.dataDir/self.config['General']['channel2']
-		self.channel1BG = self.dataDir/self.config['General']['channel1BG']
-		self.channel2BG = self.dataDir/self.config['General']['channel2BG']
-		self.saveData = self.config['General'].getboolean('saveData')
-		self.savePlots = elf.config['General'].getboolean('savePlots')
-		self.dataFolder = self.config['General']['dataFolder']
-		self.plotsFolder = self.config['General']['plotsFolder']
-		self.saveFilename = self.config['General']['saveFilename']
 		
-		#[Window]
-		self.symmetric = self.config['Window'].getboolean('symmetric')
-		self.horizontalWidth = float(self.config['Window']['horizontalWidth'])
-		self.horizontalGridNumber = float(self.config['Window']['horizontalGridNumber'])
-		self.horizontalSampleNumber = float(self.config['Window']['horizontalSampleNumber'])
-		self.horizontalUnits = self.config['Window']['horizontalUnits']
-		if self.horizontalUnits == 's':
-			self.horizontalUnits = '$Seconds$'			
-		elif self.horizontalUnits == 'm':
-			self.horizontalUnits = '$milliseconds$'		
-		elif self.horizontalUnits == 'u':
-			self.horizontalUnits = '$\mu s$'
-		elif self.horizontalUnits == 'n':
-			self.horizontalUnits = '$ns$'		
-		self.verticalUnits = self.config['Window']['verticalUnits']
-		self.verticalDivison = float(self.config['Window']['verticalDivison'])
-		self.verticalGridNumber  = float(self.config['Window']['verticalGridNumber'])
-
-		#[Integration]
-		self.SIL = float(self.config['Integration']['signalIntegrationLower'])
-		self.SIU = float(self.config['Integration']['signalIntegrationUpper'])
-		self.PIL = float(self.config['Integration']['pedestalIntegrationLower'])
-		self.PIU = float(self.config['Integration']['pedestalIntegrationUpper'])
-		
-		#[SpikeRejection]
-		self.voltageThreshold = float(self.config['SpikeRejection']['voltageThreshold'])
-		self.timeThreshold = int(self.config['SpikeRejection']['timeThreshold'])
-
-		#Calculate some values
-		#Conversion factors and array starts and stops
-		self.horizontalConversionGtoP = self.horizontalWidth/self.horizontalGridNumber #Turns grid points/ticks into physicsal marks
-		self.horizontalConversionPtoI = self.horizontalSampleNumber/self.horizontalWidth #Turns physical units into array index 
-		self.horizontalSymmetricStartPhys = self.horizontalWidth/2 - self.horizontalWidth
-		self.horizontalSymmetricStopPhys = self.horizontalWidth/2
-		self.horizontalStartPhys = float(0)
-		self.horizontalStopPhys = self.horizontalWidth
-		self.horizontalStartImag = int(0)
-		self.horizontalStopImag = int(self.horizontalSampleNumber)
-
-		#Image integration limits (user gives physical location)
-		if self.symmetric == True:
-			self.iSIL = int(round((self.SIL+self.horizontalSymmetricStopPhys)*self.horizontalConversionPtoI))
-			self.iSIU = int(round((self.SIU+self.horizontalSymmetricStopPhys)*self.horizontalConversionPtoI))
-			self.iPIL = int(round((self.PIL+self.horizontalSymmetricStopPhys)*self.horizontalConversionPtoI))
-			self.iPIU = int(round((self.PIU+self.horizontalSymmetricStopPhys)*self.horizontalConversionPtoI))
-		else:
-			self.iSIL = int(round(self.SIL*self.horizontalConversionPtoI))
-			self.iSIU = int(round(self.SIU*self.horizontalConversionPtoI))
-			self.iPIL = int(round(self.PIL*self.horizontalConversionPtoI))
-			self.iPIU = int(round(self.PIU*self.horizontalConversionPtoI))
-		
-		self.signalLimitsPhys = [self.SIL, self.SIU]
-		self.signalLimitsImag = [self.iSIL, self.iSIU]
-		self.pedestalLimitsPhys = [self.PIL, self.PIU]
-		self.pedestalLimitsImag = [self.iPIL, self.iPIU]
-
-		self.signalIntervalPhys = self.SIU - self.SIL
-		self.signalIntervalImag = self.iSIU - self.iSIL
-		self.pedestalIntervalPhys = self.PIU - self.PIL
-		self.pedestalIntervalImag = self.iPIU - self.iPIL
-		
-		self.veritcalDivisionStart = 2.
-		self.verticalEnd = self.veritcalDivisionStart*self.verticalDivison
-		self.veritcalStart = -1*(self.verticalGridNumber-self.veritcalDivisionStart)*self.verticalDivison
-		
-		#Print sanity check
-		print('Time for a sanity check...!')
-		print('Physical-to-image signal integration window map: [ '+str(self.SIL)+','+str(self.SIU)+' ] --> [ '+str(self.iSIL)+','+str(self.iSIU)+' ]')
-		print('Physical-to-image pedestal integration window map: [ '+str(self.PIL)+','+str(self.PIU)+' ] --> [ '+str(self.iPIL)+','+str(self.iPIU)+' ]')
-
-		
-		
-	def pedestalDualPlot(self, pedSum, PIL, PIU, legendObject1, legendObject2, units, fileName):
-		
-		myFont = {'fontname':'Liberation Serif'}
-		plt.figure(figsize=(9,6), dpi=100)
-		bins = np.linspace(pedSum.min(),np.max(3*pedSum[0::2].median(),3*pedSum[1::2].median()),200)
-		plt.title('Summed Pedestal Distribution (Interval: ['+str(PIL)+' '+units+', '+str(PIU)+' '+units+'])',**myFont)
-		plt.ylabel('Number of Events [$N$]',**myFont)
-		plt.xlabel('-1$\cdot$Summed Voltage[$mV$]',**myFont)
-		plt.hist(pedSum[0::2], bins, alpha=1., label=legendObject1,color='blue')
-		plt.hist(pedSum[1::2], bins, alpha=1., label=legendObject2,color='red')
+	def pedestalPlot(self, pedSum, windowParametersX, windowParametersY, legend=None, color=None, 
+		xLabel=None, yLabel=None, title=None, lowerLim=None, upperLim=None, number=None, 
+		myFont=None, fileName=None, show=False):
+	
+		if not legend:
+			legend = windowParametersY['object']
+		if not color:
+			color = windowParametersY['color']
+		if not xLabel:
+			xLabel = 'Number of Events [$N$]'
+		if not yLabel:
+			yLabel = 'Summed Voltage [$V$]'
+		if not title:
+			title = ( 'Summed Pedestal Distribution (Interval: ['+str(windowParametersX['PIL'])+' '
+			+windowParametersX['xWidthUnit']+', '+str(windowParametersX['PIU'])+' '
+			+windowParametersX['xWidthUnit']+'])' )
+		if not lowerLim:
+			lowerLim = pedSum.min()
+		if not upperLim:
+			upperLim = 3*pedSum.median()
+		if not number:
+			number = int(round(sqrt(pedSum.index.shape[0])))
+		if not myFont:
+			myFont = {'fontname':'Liberation Serif'}
+		if not fileName:
+			fileName = 'pedestal.png'
+			
+		fig, ax = plt.subplots(figsize=(9,6), dpi=100)
+		ax.set_ylabel(xLabel, **myFont)
+		ax.set_xlabel(yLabel, **myFont)
+		plt.title(title, **myFont)
 		plt.legend(loc='upper right')
+				
+		bins = np.linspace(lowerLim, upperLim, number)
+		print(bins)
+		plt.hist(pedSum, bins, label=legend, color=color)
+
 		plt.savefig(fileName,dpi=500)
-		plt.show()
+		if show == True:
+			plt.show()
+		plt.close()
+		
+	
+	def pedestalDualPlot(self, pedSum, windowParametersX, windowParametersY1, windowParametersY2, 
+		legend1=None, legend2=None, color1=None, color2=None, xLabel=None, yLabel=None, title=None, 
+		lowerLim=None, upperLim=None, number=None, myFont=None, fileName=None, show=False):
+
+		if not legend1:
+			legend1 = windowParametersY1['object']
+		if not legend2:
+			legend2 = windowParametersY2['object']
+		if not color1:
+			color1 = windowParametersY1['color']
+		if not color2:
+			color2 = windowParametersY2['color']		
+		if not xLabel:
+			xLabel = 'Number of Events [$N$]'		
+		if not yLabel:
+			yLabel = 'Summed Voltage [$V$]'
+		if not title:
+			title = ('Summed Pedestal Distributions (Interval: ['+str(windowParametersX['PIL'])+' '
+				+windowParametersX['xWidthUnit']+', '+str(windowParametersX['PIU'])+' '
+				+windowParametersX['xWidthUnit']+'])')
+		if not lowerLim:
+			lowerLim = pedSum.min()
+		if not upperLim:
+			upperLim = np.max([3*pedSum[0::2].median(),3*pedSum[1::2].median()])
+		if not number:
+			number = int(round(2*sqrt(pedSum.index.shape[0])))
+		if not myFont:
+			myFont = {'fontname':'Liberation Serif'}			
+		if not fileName:
+			fileName = 'pedestals.png'				
+		
+		fig, ax = plt.subplots(figsize=(9,6), dpi=100)
+		ax.set_ylabel(xLabel, **myFont)
+		ax.set_xlabel(yLabel, **myFont)
+		plt.title(title, **myFont)
+		plt.legend(loc='upper right')
+
+		bins = np.linspace(lowerLim, upperLim, number)
+		plt.hist(pedSum[0::2], bins, label=legend1, color=color1)
+		plt.hist(pedSum[1::2], bins, label=legend2, color=color2)
+		
+		plt.savefig(fileName,dpi=500)
+		if show == True:
+			plt.show()
 		plt.close()
 
 		
-	def plotPHD(self, sums, SIL, SIU, bins, title, legendObject, units, color, n, fileName):
+	def plotPHD(self, sums, windowParametersX, windowParametersY, legend=None, color=None,
+		xLabel=None, yLabel=None, title=None, bins=None, myFont=None, fileName=None, show=False):
 		
-		myFont = {'fontname':'Liberation Serif'}
-		plt.figure(figsize=(9,6), dpi=100)
-		plt.title(title+' (Interval: ['+str(SIL)+' '+units+', '+str(SIU)+' '+units+'])',**myFont)
-		plt.ylabel('Number of Events [$N$]',**myFont)
-		plt.xlabel('-1$\cdot$Summed Voltage[$mV$]',**myFont)
-		plt.hist(sums, bins, alpha=1.0, label=legendObject,color=color)
-		plt.ylim(0,n)
-		plt.legend(loc='upper right')
+		if not legend:
+			legend = windowParametersY['object']
+		if not color:
+			color = windowParametersY['color']
+		if not xLabel:
+			xLabel = 'Number of Events [$N$]'
+		if not yLabel:
+			yLabel = 'Summed Voltage [$V$]'
+		if not title:
+			title = ( windowParametersY['object']+' summed signal distribution (Interval: ['
+				+str(windowParametersX['SIL'])+' '+windowParametersX['xWidthUnit']+', '
+				+str(windowParametersX['SIU'])+' '+windowParametersX['xWidthUnit']+'])' )
+		if not np.any(bins):
+			bins = np.linspace(np.min(sums),5*sums.median(), int(round(2*sqrt(sums.index.shape[0]))))
+		if not myFont:
+			myFont = {'fontname':'Liberation Serif'}
+		if not fileName:
+			fileName = 'pedestal.png'		
+
+		fig, ax = plt.subplots(figsize=(9,6), dpi=100)
+		ax.set_ylabel(xLabel, **myFont)
+		ax.set_xlabel(yLabel, **myFont)
+		ax.set_title(title, **myFont)
+		ax.legend(loc='upper right')		
+		
+		plt.hist(sums, bins, label=legend, color=color)
+
 		plt.savefig(fileName,dpi=500)
-		plt.show()
+		if show == True:
+			plt.show()
 		plt.close()
 		
 		
-	def plotDualTrace(self, trace1, trace2, HStart, HStop, HSN, HGN, VS, VE, VGN,
-		title, units, SIL, SIU, PIL, PIU, color1, color2, label1, label2, fileName):
+	def plotDualTrace(self, trace1, trace2, windowParametersX, windowParametersY1, windowParametersY2,
+		legend1=None, legend2=None, color1=None, color2=None, xLabel=None, yLabel1=None, yLabel2=None,
+		title=None , myFont=None, fileName=None):
 		
-		myFont = {'fontname':'Liberation Serif'}
-		plt.figure(figsize=(9,6), dpi=100)
-		plt.subplot(111)
-		#code.interact(local=locals())
-		#sys.exit('Code Break!')
-		x = np.linspace(HStart,HStop,HSN)
-		plt.plot(x, trace1, color=color1, linewidth=0.5, linestyle="-")	
-		plt.plot(x, trace2, color=color2, linewidth=0.5, linestyle="-")
-		plt.xticks(np.linspace(HStart, HStop, HGN+1,endpoint=True),**myFont)
-		plt.ylim(VS,VE)
-		plt.yticks(np.linspace(VS, VE, VGN+1, endpoint=True),**myFont)
-		plt.grid(True)
-		blue_patch = mpatches.Patch(color=color1, label=label1)
-		red_patch = mpatches.Patch(color=color2, label=label2)
-		mpl.rc('font',family='Liberation Serif')
-		plt.legend(loc='lower right',handles=[red_patch,blue_patch])
-		plt.title(title,**myFont)
-		plt.xlabel('Time Relative to Trigger ['+units+']',**myFont)
-		plt.ylabel('Voltage [$V$]',**myFont)		
-		plt.plot([SIL,SIL],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
-		plt.plot([SIU,SIU],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
+		if not legend1:
+			legend1 = windowParametersY1['object']
+		if not legend2:
+			legend2 = windowParametersY2['object']
+		if not color1:
+			color1 = windowParametersY1['color']
+		if not color2:
+			color2 = windowParametersY2['color']		
+		if not xLabel:
+			if windowParametersX['selection'] == 'relative':
+				xLabel = 'Time Relative to Trigger ['+windowParametersX['xWidthUnit']+']'
+			else:
+				xLabel = 'Time ['+windowParametersX['xWidthUnit']+']'
+		if not yLabel1:
+			yLabel1 = windowParametersY1['object']+' Voltage [V]'
+		if not yLabel2:
+			yLabel2 = windowParametersY2['object']+' Voltage [V]'
+		if not title:
+			title = ('APT Raw Detector Trace')
+		if not fileName:
+			fileName = 'raw_trace.png'
+		if not myFont:
+			myFont = {'fontname':'Liberation Serif'}
+		
+		SIL = windowParametersX['SIL']
+		SIU = windowParametersX['SIU']
+		PIL = windowParametersX['PIL']
+		PIU = windowParametersX['PIU']
+		VS = np.min([windowParametersY1['yRange'][0], windowParametersY2['yRange'][0]])
+		VE = np.max([windowParametersY1['yRange'][1], windowParametersY2['yRange'][1]])		
+		
+		fig, ax1 = plt.subplots(figsize=(9,6), dpi=100)
+		plt.title(title,**myFont)		
+		ax1.grid(True)
+		ax1.plot(windowParametersX['x'], trace1, color=color1, linewidth=0.5, linestyle="-")
+		ax1.set_xlabel(title, **myFont)
+		ax1.set_xlim(windowParametersX['xRange'][0], windowParametersX['xRange'][1])
+		ax1.set_xticks(windowParametersX['xTicks'])
+		ax1.set_yticks(windowParametersY1['yTicks'])
+		ax1.set_ylabel(yLabel1,**myFont)
+		ax1.tick_params('y',colors=color1)
+		
+		ax2 = ax1.twinx()
+		ax2.plot(windowParametersX['x'], trace2, color=color2, linewidth=0.5, linestyle="-")
+		ax2.set_yticks(windowParametersY2['yTicks'])
+		ax2.set_ylabel(yLabel2,**myFont)
+		ax2.tick_params('y',colors=color2)
+		fig.tight_layout()
+		
+		plt.plot([SIL,SIL],[VS,VE],color='cyan',linestyle="--",alpha=0.65)
+		plt.plot([SIU,SIU],[VS,VE],color='cyan',linestyle="--",alpha=0.65)
 		plt.plot([PIL,PIL],[VS,VE],color='purple',linestyle="--",alpha=0.65)
 		plt.plot([PIU,PIU],[VS,VE],color='purple',linestyle="--",alpha=0.65)
-		plt.savefig(fileName,dpi=500)
+	
+		blue_patch = mpatches.Patch(color=color1, label=legend1)
+		red_patch = mpatches.Patch(color=color2, label=legend2)
+		mpl.rc('font',family='Liberation Serif')		
+		plt.legend(loc='lower right',handles=[red_patch,blue_patch])		
+
+		plt.savefig(fileName,dpi=500)		
 		plt.close()	
+		
+		
+class colors:
+	
+	
+	
+	BLACK = ''
+	BLUE = ''
+	GREEN = ''
+	CYAN = ''
+	RED = ''
+	PURPLE = ''
+	BROWN = ''
+	GRAY = ''
+	DARKGRAY = ''
+	LIGHTBLUE = ''
+	LIGHTGREEN = ''
+	LIGHTCYAN = ''
+	LIGHTRED = ''
+	LIGHTPURPLE = ''
+	YELLOW = ''
+	WHITE = ''
+	BOLD = ''
+	UNDERLINE = ''
+	ENDC = ''
+	
+	def enableColors(self):
+
+		self.RED = '\033[0;31m'		
+		self.ORANGE = '\033[38;5;166m'
+		self.YELLOW = '\033[1;33m'
+		self.GREEN = '\033[0;32m'
+		self.BLUE = '\033[0;34m'
+		self.INDIGO = '\033[38;5;53m'
+		self.VIOLET = '\033[38;5;163m'																		
+		self.BLACK = '\033[0;30m'
+		self.CYAN = '\033[0;36m'
+		self.PURPLE = '\033[0;35m'
+		self.BROWN = '\033[0;33m'
+		self.GRAY = '\033[0;37m'
+		self.DARKGRAY = '\033[1;30m'
+		self.LIGHTBLUE = '\033[1;34m'
+		self.LIGHTGREEN = '\033[1;32m'
+		self.LIGHTCYAN = '\033[1;36m'
+		self.LIGHTRED = '\033[1;31m'
+		self.LIGHTPURPLE = '\033[1;35m'
+		self.WHITE = '\033[1;37m'
+		self.BOLD = '\033[1m'
+		self.UNDERLINE = '\033[4m'
+		self.ENDC = '\033[0m'
+
+		
+	def disableColors(self):
+		
+		self.RED = ''		
+		self.ORANGE = ''
+		self.YELLOW = ''
+		self.GREEN = ''
+		self.BLUE = ''
+		self.INDIGO = ''
+		self.VIOLET = ''																		
+		self.BLACK = ''
+		self.CYAN = ''
+		self.PURPLE = ''
+		self.BROWN = ''
+		self.GRAY = ''
+		self.DARKGRAY = ''
+		self.LIGHTBLUE = ''
+		self.LIGHTGREEN = ''
+		self.LIGHTCYAN = ''
+		self.LIGHTRED = ''
+		self.LIGHTPURPLE = ''
+		self.WHITE = ''
+		self.BOLD = ''
+		self.UNDERLINE = ''
+		self.ENDC = ''
+		
+	def getState(self):
+		if self.ENDC:
+			return True
+		elif not self.ENDC:
+			return False
+		else:
+			return -1
+	def flipState(self):
+		if self.getState():
+			self.disableColors()
+		elif not self.getState():
+			self.enableColors()
+		else:
+			sys.exit("Can't flip ANSI state, exiting.")
+			
+	def confirmColors(self):
+		if self.getState() ==  True:		
+			print('Colors are '+self.red('e')+self.orange('n')+self.yellow('a')+self.green('b')+self.blue('l')+self.indigo('e')+self.violet('d'))
+		elif self.getState() == False:
+			print('Colors are off!')
+		elif self.getState() == -1:
+			print('Error: Can\'t get color state.')
+			
+	def orange(self, inString):
+		inString = str(self.ORANGE+inString+self.ENDC)
+		return inString
+	def indigo(self, inString):
+		inString = str(self.INDIGO+inString+self.ENDC)
+		return inString
+	def violet(self, inString):
+		inString = str(self.VIOLET+inString+self.ENDC)
+		return inString
+	def black(self, inString):
+		inString = str(self.BLACK+inString+self.ENDC)
+		return inString
+	def blue(self, inString):
+		inString = str(self.BLUE+inString+self.ENDC)
+		return inString
+	def green(self, inString):
+		inString = str(self.GREEN+inString+self.ENDC)
+		return inString
+	def cyan(self, inString):
+		inString = str(self.CYAN+inString+self.ENDC)
+		return inString
+	def red(self, inString):
+		inString = str(self.RED+inString+self.ENDC)
+		return inString
+	def purple(self, inString):
+		inString = str(self.PURPLE+inString+self.ENDC)
+		return inString
+	def brown(self, inString):
+		inString = str(self.BROWN+inString+self.ENDC)
+		return inString
+	def gray(self, inString):
+		inString = str(self.GRAY+inString+self.ENDC)
+		return inString
+	def darkgray(self, inString):
+		inString = str(self.DARKGRAY+inString+self.ENDC)
+		return inString
+	def lightblue(self, inString):
+		inString = str(self.LIGHTBLUE+inString+self.ENDC)
+		return inString
+	def lightgreen(self, inString):
+		inString = str(self.LIGHTGREEN+inString+self.ENDC)
+		return inString
+	def lightcyan(self, inString):
+		inString = str(self.LIGHTCYAN+inString+self.ENDC)
+		return inString
+	def lightred(self, inString):
+		inString = str(self.LIGHTRED+inString+self.ENDC)
+		return inString
+	def yellow(self, inString):
+		inString = str(self.YELLOW+inString+self.ENDC)
+		return inString
+	def white(self, inString):
+		inString = str(self.WHITE+inString+self.ENDC)
+		return inString
+	def bold(self, inString):
+		inString = str(self.BOLD+inString+self.ENDC)
+		return inString
+	def underline(self, inString):
+		inString = str(self.UNDERLINE+inString+self.ENDC)
+		return inString
