@@ -1,0 +1,376 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Mar  3 14:15:00 2017
+
+@author: zdhughes
+"""
+
+		def _getParsY(self, f):
+			
+			def wrapper():
+				
+				if self.doubleChannel == True:		
+					scale = np.max([self.VoltsPerDiv1, self.VoltsPerDiv2])
+					
+					if self.BGSubtraction == True:
+						scaleBG = np.max([self.VoltsPerDivBG1, self.VoltsPerDivBG2])
+						scale = np.max([scale, scaleBG])
+				else:
+					scale = self.VoltsPerDiv1
+					if self.BGSubtraction == True:
+						scaleBG = self.VoltsPerDivBG1
+						scale = np.max([self.VoltsPerDiv1, self.VoltsPerDivBG1])
+
+				yRange, yTicks = f(self, scale)
+				
+				windowPars = {
+					'yRange' : yRange,
+					'yTicks' : yTicks,
+					'scale' : scale
+					}
+				dataPars = {
+					}	
+					
+				return windowPars, dataPars
+				
+			return wrapper
+			
+			
+			
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Mar  3 15:03:51 2017
+
+@author: zdhughes
+"""
+myFont = {'fontname':'Liberation Serif'}		
+plt.figure(figsize=(9,6), dpi=100)
+plt.subplot(111)	
+plt.ylim(windowParametersY1['yRange'][0], windowParametersY1['yRange'][1])
+plt.xticks(windowParametersX['xTicks'],**myFont)
+plt.yticks(windowParametersY1['yTicks'],**myFont)
+plt.grid(True)		
+blue_patch = mpatches.Patch(color=color1, label=label1)
+red_patch = mpatches.Patch(color=color2, label=label2)
+mpl.rc('font',family='Liberation Serif')		
+plt.legend(loc='lower right',handles=[red_patch,blue_patch])		
+plt.title(title,**myFont)		
+plt.xlabel('Time Relative to Trigger ['+windowParametersX['xWidthUnit']+']',**myFont)
+plt.ylabel('Voltage [$V$]',**myFont)
+trace1.plot(linewidth=0.5, linestyle="-", color=color1)
+plt.ylabel('Voltage [$V$]',**myFont)
+plt.ylim(windowParametersY2['yRange'][0], windowParametersY2['yRange'][1])		
+plt.yticks(windowParametersY1['yTicks'],**myFont)
+plt.ylabel('Voltage [$V$]',**myFont)		
+trace2.plot(secondary_y=True, linewidth=0.5, linestyle="-", color=color2)		
+
+plt.plot([SIL,SIL],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
+plt.plot([SIU,SIU],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
+plt.plot([PIL,PIL],[VS,VE],color='purple',linestyle="--",alpha=0.65)
+plt.plot([PIU,PIU],[VS,VE],color='purple',linestyle="--",alpha=0.65)
+
+
+
+
+myFont = {'fontname':'Liberation Serif'}		
+plt.figure(figsize=(9,6), dpi=100)
+plt.subplot(111)	
+plt.xticks(windowParametersX['xTicks'],**myFont)
+plt.title(title,**myFont)		
+plt.legend(loc='lower right',handles=[red_patch,blue_patch])		
+plt.xlabel('Time Relative to Trigger ['+windowParametersX['xWidthUnit']+']',**myFont)
+
+plt.yticks(windowParametersY1['yTicks'],**myFont)
+plt.ylabel('Voltage1 [$V$]',**myFont)
+trace1.plot(linewidth=0.5, linestyle="-", color=color1, ylim=(windowParametersY1['yRange'][0], windowParametersY1['yRange'][1]), grid=True)
+
+
+plt.ylabel('Voltage2 [$V$]',**myFont)
+plt.yticks(windowParametersY1['yTicks'],**myFont)
+trace2.plot(secondary_y=True, linewidth=0.5, linestyle="-", color=color2, ylim=(windowParametersY2['yRange'][0], windowParametersY2['yRange'][1]))
+
+
+
+
+
+myFont = {'fontname':'Liberation Serif'}		
+plt.figure(figsize=(9,6), dpi=100)
+fig, ax1 = plt.subplots(figsize=(9,6), dpi=100)
+ax1.grid(True)
+ax1.plot(windowParametersX['x'], trace1, color=color1, linewidth=0.5, linestyle="-")
+ax1.set_xlabel('Time Relative to Trigger ['+windowParametersX['xWidthUnit']+']',**myFont)
+ax1.set_xlim(windowParametersX['xRange'][0],windowParametersX['xRange'][1])
+ax1.set_xticks(windowParametersX['xTicks'])
+ax1.set_yticks(windowParametersY1['yTicks'])
+ax1.set_ylabel('Voltage [$V$]')
+ax1.tick_params('y',colors=color1)
+
+ax2 = ax1.twinx()
+ax2.plot(windowParametersX['x'], trace2, color=color2, linewidth=0.5, linestyle="-")
+ax2.set_yticks(windowParametersY2['yTicks'])
+ax2.set_ylabel('Voltage2 [$V$]')
+ax2.tick_params('y',colors=color2)
+
+
+
+
+
+
+myFont = {'fontname':'Liberation Serif'}		
+fig, ax1 = plt.subplots(figsize=(9,6), dpi=100)
+blue_patch = mpatches.Patch(color=color1, label=label1)
+red_patch = mpatches.Patch(color=color2, label=label2)
+mpl.rc('font',family='Liberation Serif')		
+plt.legend(loc='lower right',handles=[red_patch,blue_patch])		
+plt.title(title,**myFont)		
+ax1.grid(True)
+ax1.plot(windowParametersX['x'], trace1, color=color1, linewidth=0.5, linestyle="-")
+ax1.set_xlabel('Time Relative to Trigger ['+windowParametersX['xWidthUnit']+']',**myFont)
+ax1.set_xlim(windowParametersX['xRange'][0],windowParametersX['xRange'][1])
+ax1.set_xticks(windowParametersX['xTicks'])
+ax1.set_yticks(windowParametersY1['yTicks'])
+ax1.set_ylabel('Voltage [$V$]')
+ax1.tick_params('y',colors=color1)
+
+ax2 = ax1.twinx()
+ax2.plot(windowParametersX['x'], trace2, color=color2, linewidth=0.5, linestyle="-")
+ax2.set_yticks(windowParametersY2['yTicks'])
+ax2.set_ylabel('Voltage2 [$V$]')
+ax2.tick_params('y',colors=color2)
+fig.tight_layout()
+
+
+SIL = windowParametersX['SIL']
+SIU = windowParametersX['SIU']
+PIL = windowParametersX['PIL']
+PIU = windowParametersX['PIU']
+VS = np.min([windowParametersY1['yRange'][0], windowParametersY2['yRange'][0]])
+VE = np.max([windowParametersY1['yRange'][1], windowParametersY2['yRange'][1]])	
+
+myFont = {'fontname':'Liberation Serif'}		
+fig, ax1 = plt.subplots(figsize=(9,6), dpi=100)
+blue_patch = mpatches.Patch(color=color1, label=label1)
+red_patch = mpatches.Patch(color=color2, label=label2)
+mpl.rc('font',family='Liberation Serif')		
+plt.legend(loc='lower right',handles=[red_patch,blue_patch])		
+plt.title(title,**myFont)		
+ax1.grid(True)
+ax1.plot(windowParametersX['x'], trace1, color=color1, linewidth=0.5, linestyle="-")
+ax1.set_xlabel('Time Relative to Trigger ['+windowParametersX['xWidthUnit']+']',**myFont)
+ax1.set_xlim(windowParametersX['xRange'][0],windowParametersX['xRange'][1])
+ax1.set_xticks(windowParametersX['xTicks'])
+ax1.set_yticks(windowParametersY1['yTicks'])
+ax1.set_ylabel('Voltage [$V$]')
+ax1.tick_params('y',colors=color1)
+
+ax2 = ax1.twinx()
+ax2.plot(windowParametersX['x'], trace2, color=color2, linewidth=0.5, linestyle="-")
+ax2.set_yticks(windowParametersY2['yTicks'])
+ax2.set_ylabel('Voltage2 [$V$]')
+ax2.tick_params('y',colors=color2)
+fig.tight_layout()
+
+plt.plot([SIL,SIL],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
+plt.plot([SIU,SIU],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
+plt.plot([PIL,PIL],[VS,VE],color='purple',linestyle="--",alpha=0.65)
+plt.plot([PIU,PIU],[VS,VE],color='purple',linestyle="--",alpha=0.65)
+
+
+
+
+SIL = windowParametersX['SIL']
+SIU = windowParametersX['SIU']
+PIL = windowParametersX['PIL']
+PIU = windowParametersX['PIU']
+VS = np.min([windowParametersY1['yRange'][0], windowParametersY2['yRange'][0]])
+VE = np.max([windowParametersY1['yRange'][1], windowParametersY2['yRange'][1]])		
+
+myFont = {'fontname':'Liberation Serif'}		
+fig, ax1 = plt.subplots(figsize=(9,6), dpi=100)
+blue_patch = mpatches.Patch(color=color1, label=label1)
+plt.title(title,**myFont)		
+ax1.grid(True)
+ax1.plot(windowParametersX['x'], trace1, color=color1, linewidth=0.5, linestyle="-")
+ax1.set_xlabel('Time Relative to Trigger ['+windowParametersX['xWidthUnit']+']',**myFont)
+ax1.set_xlim(windowParametersX['xRange'][0],windowParametersX['xRange'][1])
+ax1.set_xticks(windowParametersX['xTicks'])
+ax1.set_yticks(windowParametersY1['yTicks'])
+ax1.set_ylabel('Voltage [$V$]')
+ax1.tick_params('y',colors=color1)
+
+ax2 = ax1.twinx()
+ax2.plot(windowParametersX['x'], trace2, color=color2, linewidth=0.5, linestyle="-")
+ax2.set_yticks(windowParametersY2['yTicks'])
+ax2.set_ylabel('Voltage2 [$V$]')
+ax2.tick_params('y',colors=color2)
+fig.tight_layout()
+
+plt.plot([SIL,SIL],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
+plt.plot([SIU,SIU],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
+plt.plot([PIL,PIL],[VS,VE],color='purple',linestyle="--",alpha=0.65)
+plt.plot([PIU,PIU],[VS,VE],color='purple',linestyle="--",alpha=0.65)
+
+red_patch = mpatches.Patch(color=color2, label=label2)
+mpl.rc('font',family='Liberation Serif')		
+plt.legend(loc='lower right',handles=[red_patch,blue_patch])
+
+
+	def plotDualTrace(self, trace1, trace2, HStart, HStop, HSN, HGN, VS, VE, VGN,
+		title, units, SIL, SIU, PIL, PIU, color1, color2, label1, label2, fileName):
+		
+		myFont = {'fontname':'Liberation Serif'}
+		plt.figure(figsize=(9,6), dpi=100)
+		plt.subplot(111)
+		#code.interact(local=locals())
+		#sys.exit('Code Break!')
+		x = np.linspace(HStart,HStop,HSN)
+		plt.plot(x, trace1, color=color1, linewidth=0.5, linestyle="-")	
+		plt.plot(x, trace2, color=color2, linewidth=0.5, linestyle="-")
+		plt.xticks(np.linspace(HStart, HStop, HGN+1,endpoint=True),**myFont)
+		plt.ylim(VS,VE)
+		plt.yticks(np.linspace(VS, VE, VGN+1, endpoint=True),**myFont)
+		plt.grid(True)
+		blue_patch = mpatches.Patch(color=color1, label=label1)
+		red_patch = mpatches.Patch(color=color2, label=label2)
+		mpl.rc('font',family='Liberation Serif')
+		plt.legend(loc='lower right',handles=[red_patch,blue_patch])
+		plt.title(title,**myFont)
+		plt.xlabel('Time Relative to Trigger ['+units+']',**myFont)
+		plt.ylabel('Voltage [$V$]',**myFont)		
+		plt.plot([SIL,SIL],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
+		plt.plot([SIU,SIU],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
+		plt.plot([PIL,PIL],[VS,VE],color='purple',linestyle="--",alpha=0.65)
+		plt.plot([PIU,PIU],[VS,VE],color='purple',linestyle="--",alpha=0.65)
+		plt.savefig(fileName,dpi=500)
+		plt.close()	
+		
+	def plotDualTraceTEST(self, trace1, trace2, windowParametersX, windowParametersY, fileName, 
+		color1='blue', color2='red', label1='CsI PMT', label2='WLS Fiber PMT',
+		title='APT Raw Detector Trace'):
+		
+		SIL = windowParametersX['SIL']
+		SIU = windowParametersX['SIU']
+		PIL = windowParametersX['PIL']
+		PIU = windowParametersX['PIU']
+		VS = windowParametersY['yRange'][0]
+		VE = windowParametersY['yRange'][1]
+		
+		
+		myFont = {'fontname':'Liberation Serif'}
+		plt.figure(figsize=(9,6), dpi=100)
+		plt.subplot(111)
+		plt.plot(windowParametersX['x'], trace1, color=color1, linewidth=0.5, linestyle="-")	
+		plt.plot(windowParametersX['x'], trace2, color=color2, linewidth=0.5, linestyle="-")
+		plt.xticks(windowParametersX['xTicks'],**myFont)
+		plt.ylim(VS,VE)
+		plt.yticks(windowParametersY['yTicks'],**myFont)
+		plt.grid(True)
+		blue_patch = mpatches.Patch(color=color1, label=label1)
+		red_patch = mpatches.Patch(color=color2, label=label2)
+		mpl.rc('font',family='Liberation Serif')
+		plt.legend(loc='lower right',handles=[red_patch,blue_patch])
+		plt.title(title,**myFont)
+		plt.xlabel('Time Relative to Trigger ['+windowParametersX['xWidthUnit']+']',**myFont)
+		plt.ylabel('Voltage [$V$]',**myFont)		
+		plt.plot([SIL,SIL],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
+		plt.plot([SIU,SIU],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
+		plt.plot([PIL,PIL],[VS,VE],color='purple',linestyle="--",alpha=0.65)
+		plt.plot([PIU,PIU],[VS,VE],color='purple',linestyle="--",alpha=0.65)
+		plt.savefig(fileName,dpi=500)
+		plt.close()	
+		
+	def plotDualTraceTEST2(self, trace1, trace2, windowParametersX, windowParametersY1, windowParametersY2,
+		fileName, color1='blue', color2='red', label1='CsI PMT', label2='WLS Fiber PMT',
+		title='APT Raw Detector Trace'):
+		
+
+		SIL = windowParametersX['SIL']
+		SIU = windowParametersX['SIU']
+		PIL = windowParametersX['PIL']
+		PIU = windowParametersX['PIU']
+		VS = np.min([windowParametersY1['yRange'][0], windowParametersY2['yRange'][0]])
+		VE = np.max([windowParametersY1['yRange'][1], windowParametersY2['yRange'][1]])		
+		
+
+		
+		myFont = {'fontname':'Liberation Serif'}		
+		plt.figure(figsize=(9,6), dpi=100)
+		plt.subplot(111)	
+		plt.ylim(windowParametersY1['yRange'][0], windowParametersY1['yRange'][1])
+		plt.xticks(windowParametersX['xTicks'],**myFont)
+		plt.yticks(windowParametersY1['yTicks'],**myFont)
+		plt.grid(True)		
+		blue_patch = mpatches.Patch(color=color1, label=label1)
+		red_patch = mpatches.Patch(color=color2, label=label2)
+		mpl.rc('font',family='Liberation Serif')		
+		plt.legend(loc='lower right',handles=[red_patch,blue_patch])		
+		plt.title(title,**myFont)		
+		plt.xlabel('Time Relative to Trigger ['+windowParametersX['xWidthUnit']+']',**myFont)
+		plt.ylabel('Voltage [$V$]',**myFont)
+		trace1.plot(linewidth=0.5, linestyle="-", color=color1)
+		plt.ylabel('Voltage [$V$]',**myFont)
+
+		plt.ylim(windowParametersY2['yRange'][0], windowParametersY2['yRange'][1])		
+		plt.yticks(windowParametersY1['yTicks'],**myFont)
+		plt.ylabel('Voltage [$V$]',**myFont)		
+		trace2.plot(secondary_y=True, linewidth=0.5, linestyle="-", color=color2)		
+
+		plt.plot([SIL,SIL],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
+		plt.plot([SIU,SIU],[VS,VE],color='yellow',linestyle="--",alpha=0.65)
+		plt.plot([PIL,PIL],[VS,VE],color='purple',linestyle="--",alpha=0.65)
+		plt.plot([PIU,PIU],[VS,VE],color='purple',linestyle="--",alpha=0.65)
+
+		code.interact(local=locals())
+		sys.exit('Code Break!')
+
+		plt.savefig(fileName,dpi=500)		
+		plt.show()
+		plt.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
