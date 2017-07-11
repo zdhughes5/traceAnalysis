@@ -1,0 +1,469 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Mar  3 17:43:06 2017
+
+@author: zdhughes
+"""
+
+traceList[traceList.columns[0::2]].ix[:,1][]
+
+traceList[traceList.columns[0::2]].ix[:,1][te.windowParametersX['SIL']:te.windowParametersX['SIU']]
+
+data = np.array(-1*traceListCorrected[traceListCorrected.columns[0::2]].ix[:,1][te.windowParametersX['SIL']:te.windowParametersX['SIU']])
+data[np.where(abs(data) < 4*np.median(abs(data)))] = 0
+window = signal.general_gaussian(21, p=1, sig=10)
+filtered = signal.fftconvolve(window, data)
+filtered = (np.average(data) / np.average(filtered)) * filtered
+filtered = np.roll(filtered, -10)
+peakind = signal.find_peaks_cwt(filtered, np.arange(0.5, 100), noise_perc=0.1, min_snr=7)
+plt.plot(filtered[0:5000],'blue')
+plt.plot(peakind,filtered[peakind],'ro')
+plt.plot([0,5000],[np.median(abs(data)),np.median(abs(data))])
+#plt.plot(data)
+plt.show()
+
+data = np.array(-1*traceListCorrected[traceListCorrected.columns[0::2]].ix[:,2000][te.windowParametersX['SIL']:te.windowParametersX['SIU']])
+oldData = np.copy(data)
+medCutoff = 2*np.median(abs(data))
+stdCutoff = 2*np.std(data[np.where(abs(data) < medCutoff)])
+#data[np.where(abs(data) < medCutoff)] = 0
+window = signal.general_gaussian(21, p=0.5, sig=10)
+filtered = signal.fftconvolve(window, data)
+filtered = (np.average(data) / np.average(filtered)) * filtered
+filtered = np.roll(filtered, -10)
+peakind = signal.argrelmax(filtered, order=11)[0]
+#peakind[np.where(abs(oldData) < 4*np.median(abs(oldData)))] = peakind
+newind = peakind[np.where(filtered[peakind] > stdCutoff)]
+#plt.plot(oldData,'green')
+plt.plot(filtered[0:5000],'blue')
+plt.plot(newind,filtered[newind],'ro')
+plt.plot([0,5000],[stdCutoff,stdCutoff])
+plt.show()
+
+
+
+
+plt.plot(np.arange(0,5000), np.array(subtrace),'green')
+plt.plot(peakind,np.array(subtrace)[peakind],'bo')
+
+
+
+plt.plot(subtrace)
+plt.plot(subtrace.iloc[peakind], 'ro')
+
+
+
+
+window1 = signal.general_gaussian(21, p=1, sig=20)
+window2 = signal.general_gaussian(21, p=0.5, sig=20)
+filtered1 = signal.fftconvolve(window1, data)
+filtered1 = (np.average(data) / np.average(filtered)) * filtered
+filtered1 = np.roll(filtered1, -10)
+filtered2 = signal.fftconvolve(window2, filtered1)
+filtered2 = (np.average(filtered1) / np.average(filtered2)) * filtered1
+filtered2 = (np.average(filtered) / np.average(filtered1)) * filtered
+filtered2 = np.roll(filtered2, -10)
+peakind2 = signal.find_peaks_cwt(filtered, np.arange(1,50), noise_perc=0.1, min_snr=8)
+plt.plot(peakind2,filtered2[peakind2],'ro')
+plt.plot(filtered2)
+plt.show()
+
+
+window = signal.general_gaussian(51, p=0.5, sig=20)
+filtered = signal.fftconvolve(window, data)
+filtered = (np.average(data) / np.average(filtered)) * filtered
+filtered = np.roll(filtered, -25)
+peakind = signal.find_peaks_cwt(filtered, np.arange(1,100), noise_perc=1, min_snr=3)
+plt.plot(peakind,filtered[peakind],'ro')
+plt.plot(filtered)
+plt.show()
+xWidthUnit
+
+
+legendObject = 'WLS Photons'
+color = 'blue'
+title = 'WLS Photon Sums'
+myFont = {'fontname':'Liberation Serif'}
+plt.figure(figsize=(9,6), dpi=100)
+plt.title(title+' (Interval: ['+str(te.windowParametersX['SIL'])+' '+te.windowParametersX['xWidthUnit']+', '+str(te.windowParametersX['SIU'])+' '+te.windowParametersX['xWidthUnit']+'])',**myFont)
+plt.ylabel('Number of Events [$N$]',**myFont)
+plt.xlabel('Summed Photons',**myFont)
+plt.hist(countedPhotons, bins=np.linspace, alpha=1.0, label=legendObject,color=color)
+plt.ylim(0,n)
+plt.legend(loc='upper right')
+
+binsY = np.arange(np.min(countedPhotons),np.max(countedPhotons)+5)
+nY, trash1, trash2 = plt.hist(signalSums[0::2], binsY, alpha=1.0)
+plt.close()
+nY = max(nY) + 10
+
+
+tp.plotPHD(countedPhotons, te.windowParametersX['SIL'], te.windowParametersX['SIU'], binsY, 'WLS photon Sums', 'WLS Photons', te.xWidthUnit, 'blue', nY, 'photons.png')
+
+
+
+plt.figure(figsize=(9,6), dpi=100)
+plt.plot(CsITrace, alpha=0.5, color='blue')
+plt.plot(te.windowParametersX['x'], CsISmoothed, color='red', linewidth=2.0)
+plt.plot(te.windowParametersX['x'][minIndex],CsISmoothed[minIndex], 'r+')
+plt.show()
+
+
+
+window = signal.general_gaussian(101, p=1, sig=100)
+filtered = signal.fftconvolve(window, CsISmoothed)
+filtered = (np.average(CsISmoothed) / np.average(filtered)) * filtered
+filtered = np.roll(filtered, -50)
+plt.figure(figsize=(9,6), dpi=100)
+plt.plot(CsITrace, alpha=0.5, color='blue')
+plt.plot(te.windowParametersX['x'], filtered[0:10000], color='red', linewidth=2.0)
+plt.plot(te.windowParametersX['x'][minIndex],filtered[0:10000][minIndex], 'r+')
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if te.savePlots == True:
+	
+	
+	subprocess.call('mkdir -p '+str(te.plotsFolder), shell=True)
+	os.chdir(str(te.plotsFolder))
+
+	#Prepare for plotting!
+	tp = traceHandler.tracePlotter(config)
+	
+	#Plot the pedestal distributions
+	tp.pedestalPlot(pedestalSumsAbs[0::2], te.windowParametersX, te.windowParametersY1, fileName='00_WLS_pedestal.png')
+	tp.pedestalPlot(pedestalSumsAbs[1::2], te.windowParametersX, te.windowParametersY2, fileName='00_CsI_pedestal.png')
+	
+	#Make the three types of trace histogram plots for the CsI and WLS (6 total).
+	tp.plotPHD(signalSums[0::2], te.windowParametersX, windowParametersY1, fileName='00_WLS_PHD.png')
+	tp.plotPHD(signalSums[1::2], te.windowParametersX, windowParametersY2, fileName='00_CsI_PHD.png')
+	
+	countedPhotons = []
+	
+	for i, element in enumerate(traceListCorrected.columns[0::2]):
+		
+		CsITrace = traceListCorrected[traceListCorrected[traceListCorrected.columns[1::2]].columns[i]]
+		CsISmoothed = signal.savgol_filter(CsITrace, 501, 1, deriv=0)
+		minIndex = signal.argrelmin(CsISmoothed, order=2001)[0]
+		if len(minIndex) > 1:
+			plt.figure(figsize=(9,6), dpi=100)
+			plt.plot(testSeries, alpha=0.5, color=blue)
+			plt.plot(te.windowParametersX['x'],testSG0, color='red')
+			plt.plot(windowParametersX['x'][minIndex],testSG0[minIndex], 'ro')
+			plt.savefig('rejected_'+str(i)+'.png',dpi=500)
+			plt.close()
+			
+			tp.plotDualTrace(traceListCorrected[traceListCorrected[traceListCorrected.columns[0::2]].columns[i]],
+				traceListCorrected[traceListCorrected[traceListCorrected.columns[1::2]].columns[i]],
+				te.windowParametersX, te.windowParametersY1, te.windowParametersY2,
+				fileName='rejected_trace_'+str(i)+'.png')
+		else:
+			data = np.array(-1*traceListCorrected[traceListCorrected.columns[0::2]].ix[:,i][te.windowParametersX['SIL']:te.windowParametersX['SIU']])
+			oldData = np.copy(data)
+			medCutoff = 2*np.median(abs(data))
+			stdCutoff = 2*np.std(data[np.where(abs(data) < medCutoff)])
+			window = signal.general_gaussian(21, p=0.5, sig=10)
+			filtered = signal.fftconvolve(window, data)
+			filtered = (np.average(data) / np.average(filtered)) * filtered
+			filtered = np.roll(filtered, -10)
+			peakind = signal.argrelmax(filtered, order=11)[0]
+			newind = peakind[np.where(filtered[peakind] > stdCutoff)]
+			countedPhotons.append(len(newind))
+	
+			if (i in [0,1,2,3,4,5,6,7,8,9]) or ((i % 100) == 0):
+				
+				tp.plotDualTrace(traceListCorrected[traceListCorrected[traceListCorrected.columns[0::2]].columns[i]],
+					traceListCorrected[traceListCorrected[traceListCorrected.columns[1::2]].columns[i]],
+					te.windowParametersX, te.windowParametersY1, te.windowParametersY2,
+					fileName='APT_raw_trace_'+str(i)+'.png')
+				
+				plt.plot(filtered[0:5000],'blue')
+				plt.plot(newind,filtered[newind],'ro')
+				plt.plot([0,5000],[stdCutoff,stdCutoff])
+				plt.savefig('peaks_'+str(i)+'.png',dpi=500)
+				plt.close()
+
+				
+				
+	binsY = np.arange(np.min(countedPhotons),np.max(countedPhotons)+5)
+	tp.plotPHD(countedPhotons, te.windowParametersX, windowParametersY1, legend='WLS Photons',
+		color='cyan', yLabel='Counted photons [$N$]', title='Counted photon distribution', bins=binsY, fileName='00_photon_PHD.png')
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Mar  2 18:06:11 2017
+
+@author: zdhughes
+"""
+
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+from configparser import ConfigParser, ExtendedInterpolation
+from sys import argv
+import code
+import sys
+import traceHandler
+import pandas as pd
+import subprocess
+from scipy import signal
+
+#My janky debugger since I'm used to IDL's STOP command
+def codePause():
+	import __main__
+	code.interact(local=locals())
+	sys.exit('Code Break!')
+
+garbage, configFile = argv
+
+print('Reading configuration file...')
+config = ConfigParser(interpolation=ExtendedInterpolation(),inline_comment_prefixes=('#'))
+config.read(configFile)
+
+c = traceHandler.colors()
+if config['General'].getboolean('ansiColors') == True:
+	c.enableColors()
+	c.confirmColors()
+	
+print('Begin trace extraction...')
+te = traceHandler.traceExtractor(config, c)
+te.setupClassVariables()
+traceList = te.initializeData()
+
+############################################################
+#Ok, data preparation is over; it's time for number crunching.
+############################################################
+
+
+#Extract the pedestal region from the CsI and WLS Fiber traces
+#Sum the pedestal region
+pedestalTraces = te.extractDualSubtraces(traceList, [te.windowParametersX['pedestalLimits'], te.windowParametersX['pedestalLimits']], invert = False)
+pedestalSums = te.sumTraces(pedestalTraces)
+#del pedestalTraces
+
+#Invert the traces for nicer histograming.
+#pedestalTracesInverted = te.extractDualSubtraces(traceList, [te.windowParametersX['pedestalLimits'], te.windowParametersX['pedestalLimits']], invert = True)
+pedestalSumsAbs = te.sumTraces(abs(pedestalTraces))
+#del pedestalTracesInverted
+
+#Calculate the pedestal offsets and correct the traceList based on offsets
+#offsets is a tuple of the channel offsets. (channel1Offset, channel2Offset)
+#correct the whole traceList list. Delete the old one.
+offsets = te.getDualAvgMedian(pedestalSums, [te.dataParametersX['pedestalInterval'],te.dataParametersX['pedestalInterval']], invert = False)
+traceListCorrected = te.pedestalDualSubtractions(traceList, offsets)
+#del traceList, pedestalSums
+
+signalTracesCor = te.extractDualSubtraces(traceListCorrected, [te.windowParametersX['signalLimits'],te.windowParametersX['signalLimits']], invert=True)
+signalSums = te.sumTraces(signalTracesCor)
+	
+#code.interact(local=locals())
+#sys.exit('Code Break!')
+
+if te.savePlots == True:
+	
+	
+	subprocess.call('mkdir -p '+str(te.plotsFolder), shell=True)
+	os.chdir(str(te.plotsFolder))
+
+	#Prepare for plotting!
+	tp = traceHandler.tracePlotter(config)
+	
+	#Plot the pedestal distributions
+	tp.pedestalPlot(pedestalSumsAbs[0::2], te.windowParametersX, te.windowParametersY1, 'blue', 'WLS Fiber PMT', '1_Summed_Pedestal_Distribution.png')
+	tp.pedestalPlot(pedestalSumsAbs[1::2], te.windowParametersX, te.windowParametersY2, 'red', 'CsI PMT', '2_Summed_Pedestal_Distribution.png')
+	
+	tp.pedestalDualPlot(pedestalSumsAbs, te.windowParametersX['PIL'], te.windowParametersX['PIU'], 'CsI Trace', 'WLS Fiber Trace',te.xWidthUnit, '12_Summed_Pedestal_Distribution.png')
+
+	#Fake histograms to get parameters
+	binsCsI = np.linspace(np.min(signalSums[0::2]),5*signalSums[0::2].median(),100)
+	binsWLS = np.linspace(np.min(signalSums[1::2]),5*signalSums[1::2].median(),100)
+	nCsI, trash1, trash2 = plt.hist(signalSums[0::2], binsCsI, alpha=1.0)
+	plt.close()
+	nWLS, trash1, trash2 = plt.hist(signalSums[1::2], binsWLS, alpha=1.0)
+	plt.close()
+	nCsI = max(nCsI) + 10
+	nWLS = max(nWLS) + 10
+
+
+	#Make the three types of trace histogram plots for the CsI and WLS (6 total).
+	tp.plotPHD(signalSums[0::2], te.windowParametersX['SIL'], te.windowParametersX['SIU'], binsCsI, 'Uncorrected WSL Fiber PHD', 'WLS Fiber Trace Sums', 
+		te.xWidthUnit, 'blue', nCsI, '1_Summed_PHDPandas_Full.png')
+	tp.plotPHD(signalSums[1::2], te.windowParametersX['SIL'], te.windowParametersX['SIU'], binsWLS, 'Uncorrected CsI PHD', 'CsI Trace Sums',
+		te.xWidthUnit, 'red', nWLS, '2_Summed_PHDPandas_Full.png')
+	
+	countedPhotons = []
+	
+	
+	for i, ele in enumerate(traceListCorrected.columns[0::2]):
+	
+		data = np.array(-1*traceListCorrected[traceListCorrected.columns[0::2]].ix[:,i][te.windowParametersX['SIL']:te.windowParametersX['SIU']])
+		oldData = np.copy(data)
+		medCutoff = 2*np.median(abs(data))
+		stdCutoff = 2*np.std(data[np.where(abs(data) < medCutoff)])
+		window = signal.general_gaussian(21, p=0.5, sig=10)
+		filtered = signal.fftconvolve(window, data)
+		filtered = (np.average(data) / np.average(filtered)) * filtered
+		filtered = np.roll(filtered, -10)
+		peakind = signal.argrelmax(filtered, order=11)[0]
+		newind = peakind[np.where(filtered[peakind] > stdCutoff)]
+		countedPhotons.append(len(newind))
+	
+		if (i in [0,1,2,3,4,5,6,7,8,9]) or ((i % 100) == 0):
+			plt.plot(filtered[0:5000],'blue')
+			plt.plot(newind,filtered[newind],'ro')
+			plt.plot([0,5000],[stdCutoff,stdCutoff])
+			plt.savefig('peaks_'+str(i)+'.png',dpi=500)
+			plt.close()
+
+	binsY = np.arange(np.min(countedPhotons),np.max(countedPhotons)+5)
+	nY, trash1, trash2 = plt.hist(countedPhotons, binsY, alpha=1.0)
+	plt.close()
+	nY = max(nY) + 10
+
+	tp.plotPHD(countedPhotons, te.windowParametersX['SIL'], te.windowParametersX['SIU'], binsY, 'WLS photon Sums', 'WLS Photons', te.xWidthUnit, 'blue', nY, '00photons.png')
+
+	
+	
+		
+	for i, element in enumerate(traceListCorrected.columns[0::2]):
+		
+	
+		testSeries = traceListCorrected[traceListCorrected[traceListCorrected.columns[1::2]].columns[i]]
+		testSG0 = signal.savgol_filter(testSeries, 501, 1, deriv=0)
+		peakind = signal.argrelmin(testSG0, order=2001)[0]
+		
+		if (i in [0,1,2,3,4,5,6,7,8,9]) or ((i % 100) == 0):
+			
+			
+			tp.plotDualTrace(traceListCorrected[traceListCorrected[traceListCorrected.columns[0::2]].columns[i]],
+				traceListCorrected[traceListCorrected[traceListCorrected.columns[1::2]].columns[i]],
+				te.windowParametersX, te.windowParametersY1, te.windowParametersY2,'APT_raw_tracePandas_'+str(i)+'.png', label2='CsI PMT', label1='WLS Fiber PMT')
+			
+
+
+
+			
+os.chdir(str(te.workingDir))
+print('All Done!')
+code.interact(local=locals())
+sys.exit('Code Break!')
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
