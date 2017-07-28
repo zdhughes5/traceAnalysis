@@ -230,6 +230,7 @@ class traceExtractor:
 		self.alphaThreshold = float(self.config['SmoothedDoubleRejection']['alphaThreshold'])
 		
 		#[PeakFinder]
+		self.photonFilename = self.config['peakFinder']['photonFilename']
 		self.doPeakFinder = self.config['PeakFinder'].getboolean('doPeakFinder')
 		self.savePhotons = self.config['PeakFinder'].getboolean('savePhotons')
 		self.medianFactorPF = float(self.config['PeakFinder']['medianFactorPF'])

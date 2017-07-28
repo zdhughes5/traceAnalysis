@@ -78,7 +78,7 @@ if te.doPeakFinder == True:
 			te.medianFactorPF, te.stdFactor, te.convWindow, te.convPower, te.convSig, te.minimaWindowPF)		
 	subprocess.call('mkdir -p '+str(te.plotsDir), shell=True)
 	subprocess.call('mkdir -p '+str(te.traceDir), shell=True)
-	f = open(str(te.plotsDir/te.photonName),'w')
+	f = open(te.photonFilename,'w')
 	for i, ele in enumerate(countedPhotons):
 		f.write(str(ele)+'\n')
 	f.close()
