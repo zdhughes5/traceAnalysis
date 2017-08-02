@@ -230,7 +230,7 @@ class traceExtractor:
 		self.alphaThreshold = float(self.config['SmoothedDoubleRejection']['alphaThreshold'])
 		
 		#[PeakFinder]
-		self.photonFilename = self.config['PeakFinder']['photonFilename']
+		self.photonFilename = self.config['peakFinder']['photonFilename']
 		self.doPeakFinder = self.config['PeakFinder'].getboolean('doPeakFinder')
 		self.savePhotons = self.config['PeakFinder'].getboolean('savePhotons')
 		self.medianFactorPF = float(self.config['PeakFinder']['medianFactorPF'])
@@ -298,7 +298,7 @@ class traceExtractor:
 		self.xPlotSelection[self.xPlotType.lower()] = True
 		self.yPlotSelection = {'relative' : False, 'symmetric' : False}
 		self.yPlotSelection[self.yPlotType.lower()] = True
-		self.defaultColors = ['blue', 'red', 'green', 'cyan', 'magenta', 'yellow', 'black', '#42f48c', '#5909ed', '#e59409', '#492500']
+		self.defaultColors = ['blue', 'red', 'green', 'cyan', 'magenta', 'yellow', 'black']
 		self.currentColor = -1 
 		self.photonColors = [getDefaultColor(self) for x in self.photonFiles]
 		self.currentColor = -1
@@ -883,7 +883,6 @@ class traceExtractor:
 		handies = []
 		fig, ax = plt.subplots(figsize=(9,6), dpi=100)
 		for i, ele in enumerate(photonFiles):
-			ele = ele.strip()
 			with open(ele,'r') as f:
 				lines = [float(line.strip('\n')) for line in f]
 				CP.append(lines)
