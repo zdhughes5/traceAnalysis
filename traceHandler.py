@@ -243,6 +243,8 @@ class traceExtractor:
 		#[PhotonCounting]
 		self.doPhotonCounting = self.config['PhotonCounting'].getboolean('doPhotonCounting')
 		self.photonFiles = self.config['PhotonCounting']['photonFiles'].split(',')
+		self.photonLabels = self.config['PhotonCounting']['photonLabels'].split(',')
+		self.photonTitle = self.config['PhotonCounting']['photonTitle']
 		
 		#Parse meta file		
 		#[General]
@@ -873,8 +875,7 @@ class traceExtractor:
 		if show == True:
 			plt.show()
 		
-		plt.close()
-		
+		plt.close()	
 		
 	def plotPhotons(self, photonFiles, bins=None, ylim=None, labels=None, colors=None, xLabel=None, yLabel=None,
 		title=None, myFont=None, filename=None, show=False, save=None):

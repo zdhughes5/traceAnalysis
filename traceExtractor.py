@@ -36,8 +36,9 @@ te.setupClassVariables()
 if te.doPhotonCounting == True:
 	print('Graphing photon counts...')
 	binsY = np.arange(0, 60)
-	te.plotPhotons(te.photonFiles, bins=binsY, labels=['x3', 'x2', 'x1', 'x0', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10'], title='Photon arrival with varying trigger level',
+	te.plotPhotons(te.photonFiles, bins=binsY, labels=te.photonLabels, title=te.photonTitle,
 		filename=str(te.workingDir/'allPhotons.png'), show=te.showPlots, save=te.savePlots)
+
 else:
 	print('Begin trace extraction...')
 	traceList = te.initializeData()
