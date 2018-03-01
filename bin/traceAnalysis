@@ -1,4 +1,8 @@
 #!/bin/bash
 
 echo "Lauching traceAnalysis with configuration file: "$1
+<<<<<<< HEAD
 /nfs/programs/anaconda3/bin/python3.6 /home/zdhughes/Desktop/projects/APT/traceExtractor.py $1
+=======
+/nfs/programs/shyman/anaconda3/bin/python3.5 /home/shyman/Desktop/Projects/APT/traceAnalysis/traceExtractor.py $1
+>>>>>>> a04f9aa5e1680f5417d5c210a0bef87db0bce577

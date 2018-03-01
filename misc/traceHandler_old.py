@@ -19,9 +19,7 @@ from math import sqrt
 from scipy import signal
 from scipy.optimize import curve_fit
 
-#This class does the data extraction, crunching, and plotting. Data crunching is done functionally. 
-#That is, even though the class functions are not static, they are called like they are.
-#Why? I'm self-taught and experimenting.
+#This class does the data extraction, crunching, and plotting. Data crunching is done functionally.
 class traceExtractor:
 	
 	def __init__(self, config = None, c = None):
@@ -232,7 +230,7 @@ class traceExtractor:
 		self.alphaThreshold = float(self.config['SmoothedDoubleRejection']['alphaThreshold'])
 		
 		#[PeakFinder]
-		self.photonFilename = self.config['PeakFinder']['photonFilename']
+		self.photonFilename = self.config['peakFinder']['photonFilename']
 		self.doPeakFinder = self.config['PeakFinder'].getboolean('doPeakFinder')
 		self.savePhotons = self.config['PeakFinder'].getboolean('savePhotons')
 		self.medianFactorPF = float(self.config['PeakFinder']['medianFactorPF'])
@@ -245,8 +243,6 @@ class traceExtractor:
 		#[PhotonCounting]
 		self.doPhotonCounting = self.config['PhotonCounting'].getboolean('doPhotonCounting')
 		self.photonFiles = self.config['PhotonCounting']['photonFiles'].split(',')
-		self.photonLabels = self.config['PhotonCounting']['photonLabels'].split(',')
-		self.photonTitle = self.config['PhotonCounting']['photonTitle']
 		
 		#Parse meta file		
 		#[General]
@@ -302,7 +298,7 @@ class traceExtractor:
 		self.xPlotSelection[self.xPlotType.lower()] = True
 		self.yPlotSelection = {'relative' : False, 'symmetric' : False}
 		self.yPlotSelection[self.yPlotType.lower()] = True
-		self.defaultColors = ['blue', 'red', 'green', 'cyan', 'magenta', 'yellow', 'black', '#42f48c', '#5909ed', '#e59409', '#492500']
+		self.defaultColors = ['blue', 'red', 'green', 'cyan', 'magenta', 'yellow', 'black']
 		self.currentColor = -1 
 		self.photonColors = [getDefaultColor(self) for x in self.photonFiles]
 		self.currentColor = -1
@@ -877,7 +873,8 @@ class traceExtractor:
 		if show == True:
 			plt.show()
 		
-		plt.close()	
+		plt.close()
+		
 		
 	def plotPhotons(self, photonFiles, bins=None, ylim=None, labels=None, colors=None, xLabel=None, yLabel=None,
 		title=None, myFont=None, filename=None, show=False, save=None):
@@ -886,7 +883,6 @@ class traceExtractor:
 		handies = []
 		fig, ax = plt.subplots(figsize=(9,6), dpi=100)
 		for i, ele in enumerate(photonFiles):
-			ele = ele.strip()
 			with open(ele,'r') as f:
 				lines = [float(line.strip('\n')) for line in f]
 				CP.append(lines)
