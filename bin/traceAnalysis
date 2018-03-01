@@ -1,4 +1,4 @@
 #!/bin/bash
 
 echo "Lauching traceAnalysis with configuration file: "$1
-/nfs/programs/shyman/anaconda3/bin/python3.5 /home/shyman/Desktop/Projects/APT/traceAnalysis/traceExtractor.py $1
+$TRACEANALYSISPYTHON $TRACEANALYSISPATH/traceExtractor.py $1
