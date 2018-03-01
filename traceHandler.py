@@ -19,7 +19,9 @@ from math import sqrt
 from scipy import signal
 from scipy.optimize import curve_fit
 
-#This class does the data extraction, crunching, and plotting. Data crunching is done functionally.
+#This class does the data extraction, crunching, and plotting. Data crunching is done functionally. 
+#That is, even though the class functions are not static, they are called like they are.
+#Why? I'm self-taught and experimenting.
 class traceExtractor:
 	
 	def __init__(self, config = None, c = None):
@@ -230,7 +232,7 @@ class traceExtractor:
 		self.alphaThreshold = float(self.config['SmoothedDoubleRejection']['alphaThreshold'])
 		
 		#[PeakFinder]
-		self.photonFilename = self.config['peakFinder']['photonFilename']
+		self.photonFilename = self.config['PeakFinder']['photonFilename']
 		self.doPeakFinder = self.config['PeakFinder'].getboolean('doPeakFinder')
 		self.savePhotons = self.config['PeakFinder'].getboolean('savePhotons')
 		self.medianFactorPF = float(self.config['PeakFinder']['medianFactorPF'])
