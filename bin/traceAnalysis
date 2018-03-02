@@ -1,5 +1,5 @@
 #!/bin/bash
 
 echo "Lauching traceAnalysis with configuration file: "$1
-$TRACEANALYSISPYTHON $TRACEANALYSISPATH/traceExtractor.py
+$TRACEANALYSISPYTHON $TRACEANALYSISPATH/traceExtractor.py $1
 
