@@ -91,6 +91,7 @@ else:
 				te.medianFactorPF, te.stdFactor, te.convWindow, te.convPower, te.convSig, te.minimaWindowPF, plotRaw=te.plotRaw, traceDir=te.traceDir, 
 				showPlots=te.showPlots, savePlots=te.savePlots, c=c)		
 		f = open(te.photonFilename,'w')
+		f.write('# medianFactorPF='+str(te.medianFactorPF)+' stdFactor='+str(te.stdFactor)+' convWindow='+str(te.convWindow)+' convPower='+str(te.convPower)+' convSig='+str(te.convSig)+' minimaWindowPF='+str(te.minimaWindowPF)+'\n')
 		for i, ele in enumerate(countedPhotons):
 			f.write(str(ele)+'\n')
 		f.close()
@@ -123,7 +124,7 @@ else:
 		if te.doPeakFinder == True:
 			binsY = np.arange(0, 60)
 			tm.plotPHD(countedPhotons, te.windowParametersX, te.windowParametersY2, legend='WLS Photons',
-				color='cyan', yLabel='Counted photons [$N$]', title='Counted photon distribution', bins=binsY, ylim=500,fileName=str(te.plotsDir/'02_photon_PHD.png'), show=te.showPlots, save=te.savePlots)
+				color='cyan', yLabel='Counted photons [$N$]', title='Counted photon distribution', bins=binsY, fileName=str(te.plotsDir/'02_photon_PHD.png'), show=te.showPlots, save=te.savePlots)
 
 		#code.interact(local=locals())
 		#sys.exit('Code Break!')	

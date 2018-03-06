@@ -10,6 +10,9 @@ from math import sqrt
 from scipy import signal
 from scipy.optimize import curve_fit
 
+#manager = plt.get_current_fig_manager()
+#manager.window.showMaximized()
+
 
 #Parses the lines of the oscilliscope file and pulls out just the trace data. Optional Save.
 def extractRawTraces(lines, saveTraces=False, traceFilename = 'trace_'):
@@ -282,22 +285,22 @@ def peakFinder(WLSTraces, windowParametersX, dataParametersX, medianFactorPF, st
 			if savePlots is not None and traceDir is not None:
 				plt.savefig(str(filename))
 			if showPlots == True:
+				manager = plt.get_current_fig_manager()
+				manager.window.showMaximized()
 				plt.show()
 
-			
 		returnedInd = cutoffInds + dataParametersX['SIL']
 		photonInds.append(returnedInd)
 		countedPhotons = np.append(countedPhotons, len(returnedInd))
-		#code.interact(local=locals())
-		#sys.exit('Code Break!')
+		
 		if ((i % 100) == 0):
 			print('Working on traces '+c.blue(str(i)+' - '+str(i+99))+' for peak detection...')
+			
 	print('Total photons counted: '+c.lightgreen(str(sum(countedPhotons))))
 	print('Average number of photons per trace: '+c.lightgreen(str(sum(countedPhotons)/len(WLSTraces.columns))))
 	print('Median number of photons: '+c.lightgreen(str(np.median(countedPhotons))))
-	
+	print('Trace #'+c.blue(np.argmax(countedPhotons))+' had the maximum detected number of photons at '+c.lightgreen(np.max(countedPhotons))+'.')
 
-	
 	return photonInds, countedPhotons
 
 def pedestalPlot(pedSum, windowParametersX, windowParametersY, legend=None, color=None, 
@@ -340,6 +343,8 @@ def pedestalPlot(pedSum, windowParametersX, windowParametersY, legend=None, colo
 	if save == True:
 		plt.savefig(fileName)
 	if show == True:
+		manager = plt.get_current_fig_manager()
+		manager.window.showMaximized()
 		plt.show()
 	plt.close()
 	
@@ -388,6 +393,8 @@ def pedestalDualPlot(pedSum, windowParametersX, windowParametersY1, windowParame
 	if save == True:
 		plt.savefig(fileName)
 	if show == True:
+		manager = plt.get_current_fig_manager()
+		manager.window.showMaximized()
 		plt.show()
 	plt.close()
 
@@ -428,6 +435,8 @@ def plotPHD(sums, windowParametersX, windowParametersY, legend=None, color=None,
 	if save == True:	
 		plt.savefig(fileName)
 	if show == True:
+		manager = plt.get_current_fig_manager()
+		manager.window.showMaximized()
 		plt.show()
 	plt.close()
 	
@@ -532,6 +541,8 @@ def plotDualTrace(trace1, trace2, windowParametersX, windowParametersY1, windowP
 	if save == True:
 		plt.savefig(fileName)
 	if show == True:
+		manager = plt.get_current_fig_manager()
+		manager.window.showMaximized()
 		plt.show()
 	
 	plt.close()	
@@ -578,5 +589,7 @@ def plotPhotons(photonFiles, bins=None, ylim=None, labels=None, colors=None, xLa
 	if save == True:
 		plt.savefig(filename)
 	if show == True:
+		manager = plt.get_current_fig_manager()
+		manager.window.showMaximized()
 		plt.show()
 	plt.close()

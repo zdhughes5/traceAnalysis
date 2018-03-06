@@ -370,6 +370,7 @@ class traceHandler:
 		return (lines1, lines2)
 		
 	def initializeData(self, channels=2, saveInternal=False):
+		import traceMethods as tm
 		
 		try:
 			print('Making working directory: '+self.c.yellow(str(self.workingDir))+'...')
@@ -384,11 +385,11 @@ class traceHandler:
 			print('Reading in lines... (this takes a lot of memory!)')
 			if channels == 2:
 				lines = self.openDualRawTraceFile(self.channel1, self.channel2)
-				traceList = self.dualTraceToPandas(self.extractDualRawTraces(lines), self.windowParametersX['x'])
+				traceList = tm.dualTraceToPandas(tm.extractDualRawTraces(lines), self.windowParametersX['x'])
 				del lines
 			elif channels == 1:
 				lines = self.openRawTraceFile(self.channel1)
-				traceList = self.tracetoPandas(self.extractRawTraces(lines), self.windowParametersX['x'])
+				traceList = tm.tracetoPandas(tm.extractRawTraces(lines), self.windowParametersX['x'])
 				del lines
 			if self.saveData == True:
 				traceList.to_hdf(str(self.saveTo), 'table')
