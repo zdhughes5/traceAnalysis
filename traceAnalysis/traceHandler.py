@@ -93,13 +93,13 @@ class traceHandler:
 		
 			return (xRange, xRangeImage, x, xTicks, iSIL, iSIU, iPIL, iPIU, xWidthUnit, selection)
 
-		def _relativeParsY(self, scale):
-			yRange = (-1*scale*self.yDivs/2-self.yLocation1*scale, scale*self.yDivs/2-self.yLocation1*scale )
+		def _relativeParsY(self, scale, yLocation):
+			yRange = (-1*scale*self.yDivs/2-yLocation*scale, scale*self.yDivs/2-yLocation*scale )
 			yTicks = np.linspace(yRange[0], yRange[1], self.yDivs+1)
 			
 			return (yRange, yTicks)
 			
-		def _symmetricParsY(self, scale):
+		def _symmetricParsY(self, scale, yLocation):
 			yRange = ( -1*scale*self.yDivs/2, scale*self.yDivs/2 )
 			yTicks = np.linspace(yRange[0], yRange[1], self.yDivs+1)
 			
@@ -152,12 +152,13 @@ class traceHandler:
 				
 			return wrapper
 			
-		def _getParsY(self, f, scale, objectName):
+		def _getParsY(self, f, scale, yLocation, objectName):
 			
 			def wrapper():
 				
-				yRange, yTicks = f(self, scale)
+				yRange, yTicks = f(self, scale, yLocation)
 				windowPars = {
+					'yLocation' : yLocation,
 					'yRange' : yRange,
 					'yTicks' : yTicks,
 					'scale' : scale,
@@ -253,20 +254,31 @@ class traceHandler:
 		self.metaConfig.read(str(self.meta))
 		self.xWidthPhysical = float(self.metaConfig['General']['xWidthPhysical'])
 		self.xWidthUnit = self.metaConfig['General']['xWidthUnit']
-		self.yHeightUnits = self.metaConfig['General']['yHeightUnits']
 		self.xLocation = -1*float(self.metaConfig['General']['xLocation'])
+		self.yHeightUnits = self.metaConfig['General']['yHeightUnits']
+		self.trigger = float(self.metaConfig['General']['trigger'])
+		self.triggerSource = self.metaConfig['General']['triggerSource']
+		self.triggerType = self.metaConfig['General']['triggerType']
 		self.sample = float(self.metaConfig['General']['sample'])
 		self.xDivs = float(self.metaConfig['General']['xDivs'])
 		self.yDivs = float(self.metaConfig['General']['yDivs'])
 		
 		#[channel1]
 		self.object1 = self.metaConfig['Channel1']['object']
+		self.inputImpedence1 = self.metaConfig['Channel1']['inputImpedence']
+		self.coupling1 = self.metaConfig['Channel1']['coupling']
+		self.offset1 = self.metaConfig['Channel1']['offset']
+		self.bandwidth1 = self.metaConfig['Channel1']['bandwidth']
 		self.VoltsPerDiv1 = float(self.metaConfig['Channel1']['VoltsPerDiv'])
 		self.yLocation1 = float(self.metaConfig['Channel1']['yLocation'])
 		
 		#[channel2]
 		if self.doubleChannel == True:
 			self.object2 = self.metaConfig['Channel2']['object']
+			self.inputImpedence2 = self.metaConfig['Channel2']['inputImpedence']
+			self.coupling2 = self.metaConfig['Channel2']['coupling']
+			self.offset2 = self.metaConfig['Channel2']['offset']
+			self.bandwidth2 = self.metaConfig['Channel2']['bandwidth']
 			self.VoltsPerDiv2 = float(self.metaConfig['Channel2']['VoltsPerDiv'])
 			self.yLocation2 = float(self.metaConfig['Channel2']['yLocation'])
 		
@@ -277,18 +289,29 @@ class traceHandler:
 			
 			self.xWidthPhysicalBG = float(self.metaConfigBG['General']['xWidthPhysical'])
 			self.xWidthUnitBG = self.metaConfigBG['General']['xWidthUnit']
-			self.yHeightUnitsBG = self.metaConfigBG['General']['yHeightUnits']
 			self.xLocationBG = float(self.metaConfigBG['General']['xLocation'])
+			self.yHeightUnitsBG = self.metaConfigBG['General']['yHeightUnits']
+			self.triggerBG = float(self.metaConfigBG['General']['trigger'])
+			self.triggerSourceBG = self.metaConfigBG['General']['triggerSource']
+			self.triggerTypeBG = self.metaConfigBG['General']['triggerType']
 			self.sampleBG = float(self.metaConfigBG['General']['sample'])
 			self.xDivsBG = float(self.metaConfigBG['General']['xDivs'])
 			self.yDivsBG = float(self.metaConfigBG['General']['yDivs'])
 			
 			self.objectBG1 = self.metaConfigBG['Channel1']['object']
+			self.inputImpedenceBG1 = self.metaConfigBG['Channel1']['inputImpedence']
+			self.couplingBG1 = self.metaConfigBG['Channel1']['coupling']
+			self.offsetBG1 = self.metaConfigBG['Channel1']['offset']
+			self.bandwidth1 = self.metaConfigBG['Channel1']['bandwidth']
 			self.VoltsPerDivBG1 = float(self.metaConfigBG['Channel1']['VoltsPerDiv'])
 			self.yLocationBG1 = float(self.metaConfigBG['Channel1']['yLocation'])
 			
 			if self.doubleChannel == True:
 				self.objectBG2 = self.metaConfigBG['Channel2']['object']
+				self.inputImpedenceBG2 = self.metaConfigBG['Channel2']['inputImpedence']
+				self.couplingBG2 = self.metaConfigBG['Channel2']['coupling']
+				self.offsetBG2 = self.metaConfigBG['Channel2']['offset']
+				self.bandwidth2 = self.metaConfigBG['Channel2']['bandwidth']
 				self.VoltsPerDivBG2 = float(self.metaConfigBG['Channel2']['VoltsPerDiv'])
 				self.yLocationBG2 = float(self.metaConfigBG['Channel2']['yLocation'])	
 		
@@ -331,11 +354,11 @@ class traceHandler:
 			sys.exit('Something wrong in getting the x-axis window parameters!')
 				
 		if self.yPlotSelection['relative'] == True:
-			self.windowParametersY1, self.dataParametersY1 = _getParsY(self, _relativeParsY, self.VoltsPerDiv1, self.object1)()
-			self.windowParametersY2, self.dataParametersY2 = _getParsY(self, _relativeParsY, self.VoltsPerDiv2, self.object2)()
+			self.windowParametersY1, self.dataParametersY1 = _getParsY(self, _relativeParsY, self.VoltsPerDiv1, self.yLocation1, self.object1)()
+			self.windowParametersY2, self.dataParametersY2 = _getParsY(self, _relativeParsY, self.VoltsPerDiv2, self.yLocation2, self.object2)()
 		elif self.yPlotSelection['symmetric'] == True:
-			self.windowParametersY1, self.dataParametersY1 = _getParsY(self, _symmetricParsY, self.VoltsPerDiv1)()
-			self.windowParametersY2, self.dataParametersY2 = _getParsY(self, _symmetricParsY, self.VoltsPerDiv2)()
+			self.windowParametersY1, self.dataParametersY1 = _getParsY(self, _symmetricParsY, self.VoltsPerDiv1, self.yLocation1, self.object1)()
+			self.windowParametersY2, self.dataParametersY2 = _getParsY(self, _symmetricParsY, self.VoltsPerDiv2, self.yLocation2, self.object2)()
 		else:
 			sys.exit('Something wrong in getting the y-axis window parameters!')	
 		

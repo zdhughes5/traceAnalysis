@@ -36,7 +36,7 @@ te.setupClassVariables()
 
 if te.doPhotonCounting == True:
 	print('Graphing photon counts...')
-	binsY = np.arange(0, 60)
+	binsY = np.arange(0, 120)
 	te.plotPhotons(te.photonFiles, bins=binsY, labels=te.photonLabels, colors=te.photonColors, title=te.photonTitle, 
 				filename=str(te.workingDir/'allPhotons.png'), show=te.showPlots, save=te.savePlots)
 
@@ -122,12 +122,10 @@ else:
 			tm.plotPHD(WLSSumsCulled, te.windowParametersX, te.windowParametersY2, bins=binsWLS, fileName=str(te.plotsDir/'01_WLS_PHD_Culled.png'), show=te.showPlots, save=te.savePlots)	
 		
 		if te.doPeakFinder == True:
-			binsY = np.arange(0, 60)
+			binsY = np.arange(0, np.max(countedPhotons+1))
+
 			tm.plotPHD(countedPhotons, te.windowParametersX, te.windowParametersY2, legend='WLS Photons',
 				color='cyan', yLabel='Counted photons [$N$]', title='Counted photon distribution', bins=binsY, fileName=str(te.plotsDir/'02_photon_PHD.png'), show=te.showPlots, save=te.savePlots)
-
-		#code.interact(local=locals())
-		#sys.exit('Code Break!')	
 	
 		if te.doDoubleRejection == True:
 			print('Plotting traces...')
@@ -171,10 +169,10 @@ else:
 			if te.allPlots == True:
 				for i, index in enumerate(CsITraces.columns):
 					filename = 'trace_'+str(i)+'.png'
-					tm.plotDualTrace(CsITraces[CsITraces.columns[i]], WLSTraces[WLSTraces.columns[i]], te.windowParametersX, te.windowParametersY1,
+					tm.plotDualTrace(CsITraces[CsITraces.columns[i]], -1*WLSTraces[WLSTraces.columns[i]], te.windowParametersX, te.windowParametersY1,
 						te.windowParametersY2, title='Trace '+str(i), fileName=str(te.traceDir/filename), show=te.showPlots, save=te.savePlots, photonInds=photonInd[i])
 					if i == 0:
-						tm.plotDualTrace(CsITraces[CsITraces.columns[i]], WLSTraces[WLSTraces.columns[i]], te.windowParametersX, te.windowParametersY1,
+						tm.plotDualTrace(CsITraces[CsITraces.columns[i]], -1*WLSTraces[WLSTraces.columns[i]], te.windowParametersX, te.windowParametersY1,
 							te.windowParametersY2, title='Trace '+str(i), fileName=str(te.traceDir/filename), show=te.showPlots, save=te.savePlots, photonInds=photonInd[i])		
 			else:
 				for i, index in enumerate(CsITraces.columns):

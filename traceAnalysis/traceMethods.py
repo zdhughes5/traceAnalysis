@@ -259,9 +259,10 @@ def peakFinder(WLSTraces, windowParametersX, dataParametersX, medianFactorPF, st
 	
 	print('Looking at '+str(len(WLSTraces.columns))+' traces.')
 	for i, thisTrace in enumerate(WLSTraces.columns):
-		signalData = np.array(-1*WLSTraces[thisTrace][windowParametersX['SIL']:windowParametersX['SIU']])
-		medCutoff = medianFactorPF*np.median(abs(signalData))
-		stdCutoff = stdFactor*np.std(signalData[np.where(abs(signalData) < medCutoff)])
+		signalData = np.array(WLSTraces[thisTrace][windowParametersX['SIL']:windowParametersX['SIU']])
+		pedestalData = np.array(WLSTraces[thisTrace][windowParametersX['PIL']:windowParametersX['PIU']])
+		medCutoff = medianFactorPF*np.median(abs(pedestalData))
+		stdCutoff = stdFactor*np.std(pedestalData[np.where(abs(pedestalData) < medCutoff)])
 		window = signal.general_gaussian(convWindow, p=convPower, sig=convSig)
 		smoothedData = signal.fftconvolve(window, signalData)
 		smoothedData = (np.average(signalData) / np.average(smoothedData)) * smoothedData
@@ -525,9 +526,9 @@ def plotDualTrace(trace1, trace2, windowParametersX, windowParametersY1, windowP
 	
 
 	
-	if legend1 == 'WLS Fiber' and photonInds is not None:
+	if legend1 != 'CsI' and photonInds is not None:
 		ax1.scatter(trace1.index.values[photonInds], trace1.iloc[photonInds], marker='+', color='black')
-	elif legend2 == 'WLS Fiber' and photonInds is not None:
+	elif legend2 != 'CsI' and photonInds is not None:
 		ax2.scatter(trace2.index.values[photonInds], trace2.iloc[photonInds], marker='+', color='black')
 		
 	#code.interact(local=locals())
@@ -561,7 +562,7 @@ def plotPhotons(photonFiles, bins=None, ylim=None, labels=None, colors=None, xLa
 	n = len(CP)
 
 	if not np.any(bins):
-		bins = np.arange(0,60)
+		bins = np.arange(0,100)
 	if ylim:
 		ax.set_ylim(0, ylim)
 	if not labels:
